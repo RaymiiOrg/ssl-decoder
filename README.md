@@ -2,18 +2,29 @@
 
 Simple PHP script which decodes an SSL connection or certificate and displays information.
 
-## Requirements
+### Features
+
+- Decodes CSR
+- Decodes Certificates
+- Decodes SSL Connections
+- OCSP validation
+- CRL validation
+- Full certificate chain validation.
+- Issuer validation
+- Date validation
+
+### Requirements
 
 - PHP 5.6+
 - OpenSSL
 - PHP must allow shell_exec and remote fopen.
 
-## Demo
+### Demo
 
 See [https://z1s.org/ssl/](https://z1s.org/ssl/).
 
-<a href="http://imgur.com/R1BQlLV"><img src="http://i.imgur.com/R1BQlLVm.png" title="source: imgur.com" /></a>
+<a href="https://z1s.org/ssl/"><img src="http://i.imgur.com/R1BQlLVm.png" /></a>
 
-## License
+### License
 
 GPLv3
