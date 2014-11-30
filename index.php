@@ -217,6 +217,72 @@
         return $result;
       }
 
+      function ssl_conn_protocols($host, $port){
+
+        $results = array('sslv3' => false, 
+                         'tlsv1.0' => false,
+                         'tlsv1.1' => false,
+                         'tlsv1.2' => false);
+
+        $stream_sslv3 = stream_context_create (array("ssl" => 
+          array("verify_peer" => false,
+            "capture_session_meta" => true,
+            "verify_peer_name" => false,
+            "allow_self_signed" => true,
+            'crypto_method' => STREAM_CRYPTO_METHOD_SSLv3_CLIENT,
+            "sni_enabled" => true)));
+        $read_stream_sslv3 = stream_socket_client("sslv3://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_sslv3);
+        if ( $read_stream_sslv3 === false ) {
+          $results['sslv3'] = false;
+        } else {
+          $results['sslv3'] = true;
+        }
+
+        $stream_tlsv10 = stream_context_create (array("ssl" => 
+          array("verify_peer" => false,
+            "capture_session_meta" => true,
+            "verify_peer_name" => false,
+            "allow_self_signed" => true,
+            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_0_CLIENT,
+            "sni_enabled" => true)));
+        $read_stream_tlsv10 = stream_socket_client("tlsv1.0://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv10);
+        if ( $read_stream_tlsv10 === false ) {
+          $results['tlsv1.0'] = false;
+        } else {
+          $results['tlsv1.0'] = true;
+        }
+
+        $stream_tlsv11 = stream_context_create (array("ssl" => 
+          array("verify_peer" => false,
+            "capture_session_meta" => true,
+            "verify_peer_name" => false,
+            "allow_self_signed" => true,
+            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_1_CLIENT,
+            "sni_enabled" => true)));
+        $read_stream_tlsv11 = stream_socket_client("tlsv1.1://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv11);
+        if ( $read_stream_tlsv11 === false ) {
+          $results['tlsv1.1'] = false;
+        } else {
+          $results['tlsv1.1'] = true;
+        }
+
+        $stream_tlsv12 = stream_context_create (array("ssl" => 
+          array("verify_peer" => false,
+            "capture_session_meta" => true,
+            "verify_peer_name" => false,
+            "allow_self_signed" => true,
+            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_2_CLIENT,
+            "sni_enabled" => true)));
+        $read_stream_tlsv12 = stream_socket_client("tlsv1.2://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv12);
+        if ( $read_stream_tlsv12 === false ) {
+          $results['tlsv1.2'] = false;
+        } else {
+          $results['tlsv1.2'] = true;
+        }
+
+        return $results;
+      }
+
       function ssl_conn_metadata($host, $port, $chain=null) {
         $stream = stream_context_create (array("ssl" => 
           array("verify_peer" => false,
@@ -288,16 +354,36 @@
                   <td>Protocol</td>
                   <td>
                     <?php
-                    if ($context_meta['protocol'] == "TLSv1.2") {
-                      echo '<span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">';
-                      echo htmlspecialchars($context_meta['protocol']) . "</span>";
-                    } else if ($context_meta['protocol'] == "SSLv3" || $context_meta['protocol'] == "SSLv2") {
-                      echo '<span class="text-danger glyphicon glyphicon-remove"></span><span class="text-danger">';
-                      echo htmlspecialchars($context_meta['protocol']) . "</span>";
-                    } else {
-                      echo htmlspecialchars($context_meta['protocol']);
+                    $protocols = ssl_conn_protocols($host, $port);
+                    foreach (array_reverse($protocols) as $key => $value) {
+                      if ( $value == true ) {
+                        if ( $key == "tlsv1.2") {
+                          echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">TLSv1.2 (Supported)</span></p>';
+                        } else if ( $key == "tlsv1.1") {
+                          echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
+                        } else if ( $key == "tlsv1.0") {
+                          echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
+                        } else if ( $key == "sslv3") {
+                          echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported)</span></p>';
+                        } else {
+                          echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
+                        }
+                      } else {
+                        if ( $key == "tlsv1.2") {
+                          echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span></p>';
+                        } else if ( $key == "tlsv1.1") {
+                          echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.1  (Not supported)</p>';
+                        } else if ( $key == "tlsv1.0") {
+                          echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.0  (Not supported)</p>';
+                        } else if ( $key == "sslv3") {
+                          echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv3 (Not supported)</span></p>';
+                        } else {
+                          echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
+                        }
+                      }
                     }
                     ?>
+
                   </td>
                 </tr>
                 <tr>

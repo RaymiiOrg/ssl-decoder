@@ -7,6 +7,7 @@ Simple PHP script which decodes an SSL connection or certificate and displays in
 - Decodes CSR
 - Decodes Certificates
 - Decodes SSL Connections
+- SSL Protocol version tester
 - OCSP validation
 - CRL validation
 - Full certificate chain validation.
