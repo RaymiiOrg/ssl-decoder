@@ -1144,7 +1144,7 @@
 
     <div class="footer">
       <div class="col-md-6 col-md-offset-1 container">
-        <p class="text-muted">By <a href="https://raymii.org" >https://raymii.org</a>. License: GPLv3.</p>
+        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a></p>
       </div>
     </div>
   </body>
