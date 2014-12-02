@@ -362,7 +362,7 @@
                         } else if ( $key == "tlsv1.1") {
                           echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
                         } else if ( $key == "tlsv1.0") {
-                          echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
+                          echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
                         } else if ( $key == "sslv3") {
                           echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported)</span></p>';
                         } else {
