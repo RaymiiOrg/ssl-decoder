@@ -310,9 +310,9 @@
                   if ( $chain ) {
                 ?>
                   <tr>
-                    <td>Chain sent by Server (in server order)</td>
-                    <td>
-                    <?php 
+                     <td>Chain sent by Server (in server order)</td>
+                    <td style="font-family: monospace;">
+                    <?php
                     foreach ($chain as $key => $cert) {
                       if ( $key == 10) {
                         echo "<span class='text-danger'>Error: Certificate chain to large.</span><br>";
@@ -322,9 +322,9 @@
                         continue;
                       }
                       if (openssl_x509_parse($cert)['issuer']['CN'] && openssl_x509_parse($cert)['subject']['CN']) {
-                        echo "Name: <i>";
+                        echo "Name...........: <i>";
                         echo htmlspecialchars(openssl_x509_parse($cert)['subject']['CN']);
-                        echo " </i><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Issued by:<i> ";
+                        echo " </i><br>Issued by......:<i> ";
                         echo htmlspecialchars(openssl_x509_parse($cert)['issuer']['CN']);
                         echo "</i><br>";
                       }
