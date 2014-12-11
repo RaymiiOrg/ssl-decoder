@@ -196,6 +196,10 @@
         $ocsp_uri = explode("OCSP - URI:", $cert_data['extensions']['authorityInfoAccess'])[1];
         $ocsp_uri = explode("\n", $ocsp_uri)[0];
         $ocsp_uri = explode(" ", $ocsp_uri)[0];
+        if (empty($ocsp_uri) ) {
+          $result = array('unknown' => "Could not find OCSP URI", );
+          return $result;
+        }
         openssl_x509_export($raw_cert_data, $pem_client);
         openssl_x509_export($raw_next_cert_data, $pem_issuer);
         openssl_x509_export_to_file($raw_next_cert_data, $tmp_dir.$random_blurp.'.cert_issuer.pem');
@@ -560,13 +564,20 @@
 // ocsp
             if ( !empty($cert_data['extensions']['authorityInfoAccess']) && !empty($next_cert_data) ) {
               echo "<td>";
-              $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
-              if ($ocsp_result["good"]) { 
-                echo '<h1><span class="text-success glyphicon glyphicon-ok"></span>&nbsp;</h1>';
-              } else if ($ocsp_result["revoked"]) {
-                echo '<h1><span class="text-danger glyphicon glyphicon-remove"></span>&nbsp;</h1>';
+              $ocsp_uri = explode("OCSP - URI:", $cert_data['extensions']['authorityInfoAccess'])[1];
+              $ocsp_uri = explode("\n", $ocsp_uri)[0];
+              $ocsp_uri = explode(" ", $ocsp_uri)[0];
+              if (!empty($ocsp_uri)) {
+                $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
+                if ($ocsp_result["good"]) { 
+                  echo '<h1><span class="text-success glyphicon glyphicon-ok"></span>&nbsp;</h1>';
+                } else if ($ocsp_result["revoked"]) {
+                  echo '<h1><span class="text-danger glyphicon glyphicon-remove"></span>&nbsp;</h1>';
+                } else {
+                  echo '<h1><span class="text-danger glyphicon glyphicon-question-sign"></span>&nbsp;</h1>';
+                }
               } else {
-                echo '<h1><span class="text-danger glyphicon glyphicon-question-sign"></span>&nbsp;</h1>';
+                  echo "<td></td>";
               }
               echo "</td>";
             } else {
@@ -816,7 +827,7 @@
                   $ocsp_uri = explode("\n", $ocsp_uri)[0];
                   $ocsp_uri = explode(" ", $ocsp_uri)[0];
 
-                  if ( isset($raw_next_cert_data) ) {
+                  if ( isset($raw_next_cert_data) && !empty($ocsp_uri) ) {
 
                     $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
                     if ($ocsp_result["good"]) { 
@@ -835,6 +846,8 @@
                       echo " - " . htmlspecialchars($ocsp_uri) . "</span>";
                       echo "<pre>" . htmlspecialchars($ocsp_result["unknown"]) . "</pre>";
                     }
+                  } else {
+                      echo "No OCSP URI found in certificate";
                   }
                   ?>
                 </td>
