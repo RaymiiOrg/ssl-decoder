@@ -221,6 +221,13 @@
         return $result;
       }
 
+      function server_http_headers($host, $port){
+        $headers = get_headers("https://$host:$port", 1);
+        if (!empty($headers)) {
+          return $headers;
+        }
+      }
+      
       function ssl_conn_protocols($host, $port){
 
         $results = array('sslv3' => false, 
@@ -396,6 +403,34 @@
                     <?php            
                     echo htmlspecialchars($context_meta['cipher_name']);
                     echo " (".htmlspecialchars($context_meta['cipher_bits'])." bits)";
+                    ?>
+                  </td>
+                </tr>
+                <?php
+                  $headers = server_http_headers($host, $port);
+
+                  if ( !empty($headers["Server"]) ) {
+                ?>
+                <tr>
+                  <td>Server</td>
+                  <td>
+                    <?php 
+                      echo htmlspecialchars(substr($headers["Server"][0], 0, 50));
+                    ?>
+                  </td>
+                </tr>
+                <?php
+                  } 
+                ?>
+                <tr>
+                  <td><a href="https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html">Strict Transport Security</a></td>
+                  <td>
+                    <?php 
+                    if ( $headers["Strict-Transport-Security"] ) {
+                      echo htmlspecialchars(substr($headers["Strict-Transport-Security"], 0, 50));
+                    } else {
+                      echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
+                    }
                     ?>
                   </td>
                 </tr>
@@ -1157,7 +1192,7 @@
 
     <div class="footer">
       <div class="col-md-6 col-md-offset-1 container">
-        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong></p>
+        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.2.</p>
       </div>
     </div>
   </body>
