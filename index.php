@@ -408,26 +408,18 @@
                 </tr>
                 <?php
                   $headers = server_http_headers($host, $port);
-
-                  if ( !empty($headers["Server"]) ) {
-                ?>
-                <tr>
-                  <td>Server</td>
-                  <td>
-                    <?php 
-                      echo htmlspecialchars(substr($headers["Server"][0], 0, 50));
-                    ?>
-                  </td>
-                </tr>
-                <?php
-                  } 
                 ?>
                 <tr>
                   <td><a href="https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html">Strict Transport Security</a></td>
                   <td>
                     <?php 
                     if ( $headers["Strict-Transport-Security"] ) {
-                      echo htmlspecialchars(substr($headers["Strict-Transport-Security"], 0, 50));
+                      if ( is_array($headers["Strict-Transport-Security"])) {
+                        echo htmlspecialchars(substr($headers["Strict-Transport-Security"][0], 0, 50));
+                        echo "<br > <i>HSTS header was found multiple times. Only showing the first one.</i>";
+                      } else {
+                        echo htmlspecialchars(substr($headers["Strict-Transport-Security"], 0, 50));
+                      }
                     } else {
                       echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
                     }
