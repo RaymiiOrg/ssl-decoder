@@ -427,6 +427,34 @@
                   </td>
                 </tr>
                 <tr>
+                  <td><a href="https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html">HTTP Public Key Pinning Extension (HPKP)</a></td>
+                  <td>
+                    <?php 
+                    if ( $headers["Public-Key-Pins"] ) {
+                      if ( is_array($headers["Public-Key-Pins"])) {
+                        echo htmlspecialchars(substr($headers["Public-Key-Pins"][0], 0, 255));
+                        echo "<br > <i>HPKP header was found multiple times. Only showing the first one.</i>";
+                      } else {
+                        echo htmlspecialchars(substr($headers["Public-Key-Pins"], 0, 255));
+                      }
+                    } else {
+                      echo '<span>Not Set</span>';
+                    }
+                    ?>
+                    <?php 
+                    if ( $headers["Public-Key-Pins-Report-Only"] ) {
+                      echo "<b>Report Only</b>: ";
+                      if ( is_array($headers["Public-Key-Pins-Report-Only"])) {
+                        echo htmlspecialchars(substr($headers["Public-Key-Pins-Report-Only"][0], 0, 255));
+                        echo "<br > <i>HPKP Report Only header was found multiple times. Only showing the first one.</i>";
+                      } else {
+                        echo htmlspecialchars(substr($headers["Public-Key-Pins-Report-Only"], 0, 255));
+                      }
+                    } 
+                    ?>
+                  </td>
+                </tr>
+                <tr>
                   <td>This Server' OpenSSL Version</td>
                   <td>
                   <?php
@@ -449,6 +477,14 @@
             return false;
           }
         }
+      }
+
+      function cert_signature_algorithm($raw_cert_data) {
+          $cert_read = openssl_x509_read($raw_cert_data);
+          openssl_x509_export($cert_read, $out, FALSE);
+          $signature_algorithm = null;
+          if(preg_match('/^\s+Signature Algorithm:\s*(.*)\s*$/m', $out, $match)) $signature_algorithm = $match[1];
+          return($signature_algorithm);
       }
 
       function cert_parse($raw_cert_data, $raw_next_cert_data=null, $csr=false, $host=null, $port=null, $is_issuer=false) {
@@ -953,7 +989,6 @@
                   <?php
                   $key_details = openssl_pkey_get_details(openssl_pkey_get_public($raw_cert_data));
 
-
                   if ( $key_details['rsa'] ) {
                     echo $key_details['bits'];
                     echo " bits RSA";
@@ -966,6 +1001,15 @@
                   } else {
                     "Unknown: <pre>" . var_dump(htmlspecialchars($key_details)) . "</pre>";
                   }
+                  ?>
+                </td>
+              </tr>
+              <tr>
+                <td>Signature Algorithm</td>
+                <td>
+                  <?php
+                    $signature_algorithm = cert_signature_algorithm($raw_cert_data);
+                    echo htmlspecialchars($signature_algorithm);
                   ?>
                 </td>
               </tr>
@@ -1184,7 +1228,7 @@
 
     <div class="footer">
       <div class="col-md-6 col-md-offset-1 container">
-        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.2.</p>
+        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.3</p>
       </div>
     </div>
   </body>
