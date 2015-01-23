@@ -55,6 +55,45 @@
         } while($dec>0);
         return $hex;
       }
+      function startsWith($haystack, $needle) {
+        // search backwards starting from haystack length characters from the end
+        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
+      }
+      function endsWith($haystack, $needle) {
+        // search forward starting from end minus needle length characters
+        return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
+      }
+
+      function ocsp_stapling($host, $port){
+        $result = "";
+        $output = shell_exec('echo | timeout 5 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -tlsextdebug -status 2>&1 | sed -n "/OCSP response:/,/---/p"'); 
+        if (strpos($output, "no response sent") !== false) { 
+          $result = array("working" => 0,
+            "cert_status" => "No response sent");
+          return;
+        }
+        if (strpos($output, "OCSP Response Data:") !== false) {
+            $lines = array();
+            $output = preg_replace("/[[:blank:]]+/"," ", $output);
+            $stapling_status_lines = explode("\n", $output);
+            $stapling_status_lines = array_map('trim', $stapling_status_lines);
+            foreach($stapling_status_lines as $line) {
+              if(endsWith($line, ":") == false) {
+                list($k, $v) = explode(":", $line);
+                $lines[trim($k)] = trim($v);
+              }
+          }
+          $result = array("working" => 1,
+            "Cert Status" => $lines["Cert Status"],
+            "This Update" => $lines["This Update"],
+            "Next Update" => $lines["Next Update"],
+            "Responder ID" => $lines["Responder Id"],
+            "Hash Algorithm" => $lines["Hash Algorithm"],
+            "Signature Algorithm" => $lines["Signature Algorithm"],
+            "Issuer Name Hash" => $lines["Issuer Name Hash"]);
+        }
+        return $result;
+      }
 
       function verify_certificate_hostname($raw_cert, $host, $port) {
         $cert_data = openssl_x509_parse($raw_cert);
@@ -63,8 +102,10 @@
           $cert_host_names[] = $cert_data['subject']['CN'];
           if ($cert_data['extensions']['subjectAltName']) {
             foreach ( explode("DNS:", $cert_data['extensions']['subjectAltName']) as $altName ) {
-              if ( !empty(str_replace(',', "", "$altName"))) {
-                  $cert_host_names[] = str_replace(" ", "", str_replace(',', "", "$altName"));
+              foreach (explode(",", $altName) as $key => $value) {
+                if ( !empty(str_replace(',', "", "$value"))) {
+                    $cert_host_names[] = str_replace(" ", "", str_replace(',', "", "$value"));
+                }
               }
             }
           }
@@ -125,7 +166,17 @@
         foreach ($crl_uris as $key => $uri) {
           if (!empty($uri)) {
             if (0 === strpos($uri, 'http')) {
-              if ( file_put_contents("/tmp/" . $random_blurp .  "." . $key . ".crl", fopen($uri, 'r')) === false ) {
+              $fp = fopen ("/tmp/" . $random_blurp .  "." . $key . ".crl", 'w+');
+              $ch = curl_init(($uri));
+              curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+              curl_setopt($ch, CURLOPT_FILE, $fp);
+              curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+              if(curl_exec($ch) === false)
+              {
+                echo '<pre>Curl error: ' . htmlspecialchars(curl_error($ch)) ."</pre>";
+              }
+              curl_close($ch);
+              if(stat("/tmp/" . $random_blurp .  "." . $key . ".crl")['size'] < 10 ) {
                 return false;
               } 
               $crl_text = shell_exec("openssl crl -noout -text -inform der -in /tmp/" . $random_blurp .  "." . $key . ".crl 2>&1");
@@ -138,7 +189,7 @@
 
               if ( strpos($crl_text, "unable to load CRL") === 0 ) {
                 if ( $verbose ) {
-                  $result = "<span class='text-danger glyphicon glyphicon-exclamation-sign'></span> - <span class='text-danger'>CRL invalid. (" . $uri . ")</span>";
+                  $result = "<span class='text-danger glyphicon glyphicon-exclamation-sign'></span> - <span class='text-danger'>CRL invalid. (" . $uri . ")</span><br><pre> " . htmlspecialchars($crl_text) . "</pre>";
                     return $result;
                 } else {
                   $result = "<span class='text-danger glyphicon glyphicon-remove'></span>";
@@ -209,12 +260,27 @@
 
         $output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" 2>&1');
         $filter_output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem"');
-        if (strpos($output, $tmp_dir.$random_blurp.".cert_client.pem: good") !== false) { 
-          $result = array('good' => $filter_output, );
-        } else if (strpos($output, $tmp_dir.$random_blurp.".cert_client.pem: revoked") !== false) {
-          $result = array('revoked' => $filter_output, );
+
+        $lines = array();
+        $output = preg_replace("/[[:blank:]]+/"," ", $output);
+        $ocsp_status_lines = explode("\n", $output);
+        $ocsp_status_lines = array_map('trim', $ocsp_status_lines);
+        foreach($ocsp_status_lines as $line) {
+          if(endsWith($line, ":") == false) {
+            list($k, $v) = explode(":", $line);
+            $lines[trim($k)] = trim($v);
+          }
+        }  
+
+        $result = array("This Update" => $lines["This Update"],
+          "Next Update" => $lines["Next Update"],
+          "ocsp_verify_status" => $lines[$tmp_dir . $random_blurp . ".cert_client.pem"]);
+        if ($result["ocsp_verify_status"] == "good") { 
+          $result["good"] = $filter_output;
+        } else if ($result["ocsp_verify_status"] == "revoked") {
+          $result["revoked"] = $filter_output;
         } else {
-          $result = array('unknown' => $filter_output, );
+          $result["unknown"] = $filter_output;
         }
         unlink($tmp_dir.$random_blurp.'.cert_client.pem');
         unlink($tmp_dir.$random_blurp.'.cert_issuer.pem');
@@ -222,6 +288,18 @@
       }
 
       function server_http_headers($host, $port){
+          stream_context_set_default(
+            array("ssl" => 
+              array("verify_peer" => false,
+                "capture_session_meta" => true,
+                "verify_peer_name" => false,
+                "allow_self_signed" => true,
+                "sni_enabled" => true),
+              'http' => array(
+              'method' => 'HEAD'
+              )
+            )
+          );
         $headers = get_headers("https://$host:$port", 1);
         if (!empty($headers)) {
           return $headers;
@@ -455,6 +533,25 @@
                   </td>
                 </tr>
                 <tr>
+                  <td>OCSP Stapling</td>
+                  <td>
+                  <?php 
+                    $stapling = ocsp_stapling($host,$port);
+                    if($stapling["working"] == 1) {
+                      echo "<table class='table'>";
+                      foreach ($stapling as $key => $value) {
+                        if ($key != "working") {
+                          echo "<tr><td>" . $key . "</td><td>" . $value . "</td></tr>";
+                        }
+                      } 
+                      echo "</table>";
+                    } else {
+                      echo "No response received.";
+                    }
+                  ?>
+                  </td>
+                </tr>
+                <tr>
                   <td>This Server' OpenSSL Version</td>
                   <td>
                   <?php
@@ -632,9 +729,9 @@
               $ocsp_uri = explode(" ", $ocsp_uri)[0];
               if (!empty($ocsp_uri)) {
                 $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
-                if ($ocsp_result["good"]) { 
+                if ($ocsp_result["ocsp_verify_status"] == "good") { 
                   echo '<h1><span class="text-success glyphicon glyphicon-ok"></span>&nbsp;</h1>';
-                } else if ($ocsp_result["revoked"]) {
+                } else if ($ocsp_result["ocsp_verify_status"] == "revoked") {
                   echo '<h1><span class="text-danger glyphicon glyphicon-remove"></span>&nbsp;</h1>';
                 } else {
                   echo '<h1><span class="text-danger glyphicon glyphicon-question-sign"></span>&nbsp;</h1>';
@@ -893,20 +990,19 @@
                   if ( isset($raw_next_cert_data) && !empty($ocsp_uri) ) {
 
                     $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
-                    if ($ocsp_result["good"]) { 
-                      echo '<span class="text-success glyphicon glyphicon-ok-sign"></span>';
+                    if ($ocsp_result["ocsp_verify_status"] == "good") { 
+                      echo '<span class="text-success glyphicon glyphicon-ok-sign"></span> - ';
                       echo '<span class="text-success">';
-                      echo " - " . htmlspecialchars($ocsp_uri) . "</span>";
-                      echo "<pre>";
-                      echo htmlspecialchars($ocsp_result["good"]);
-                      echo "</pre>";
-                    } else if ( $ocsp_result["revoked"] ) {
-                        echo "<pre>" . htmlspecialchars($ocsp_result["revoked"]) . "</pre>";
+                      echo "This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
+                      echo "Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
+                    } else if ( $ocsp_result["ocsp_verify_status"] == "revoked") {
+                      echo "This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
+                      echo "Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
                     } else {
                       echo '<span class="text-danger glyphicon glyphicon-question-sign"></span>';
                       echo '<span class="text-danger">';
 
-                      echo " - " . htmlspecialchars($ocsp_uri) . "</span>";
+                      echo " - " . htmlspecialchars($ocsp_uri) . "</span><br>";
                       echo "<pre>" . htmlspecialchars($ocsp_result["unknown"]) . "</pre>";
                     }
                   } else {
@@ -1228,7 +1324,7 @@
 
     <div class="footer">
       <div class="col-md-6 col-md-offset-1 container">
-        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.3</p>
+        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.4</p>
       </div>
     </div>
   </body>
