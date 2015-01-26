@@ -1,3 +1,8 @@
+<?php
+ob_start();
+$write_cache = 0;
+?>
+
 <!--
     Copyright (C) 2015 Remy van Elst
 
@@ -1285,6 +1290,12 @@
                 <h1>SSL Decoder</h1>
             </div>
             <?
+          $write_cache = 1;
+          if (!is_dir('results')) {
+            mkdir('results');
+          }
+          $epoch = date('U');
+          $random_bla = md5(uniqid(rand(), true));
           }
             $host = mb_strtolower(get($_GET['host']));
             $port = get($_GET['port'], '443');
@@ -1311,8 +1322,12 @@
               if ( $read_stream === false ) {
                 echo "<span class='text-danger'> Failed to connect:" . htmlspecialchars($errno) ." " . htmlspecialchars($errstr) . "</span>";
                 echo "<hr>";
-
+                $write_cache = 0;
               } else {
+                $hostfilename = preg_replace("([^\w\s\d\-_~,;:\[\]\(\).])", '', $host);
+                $hostfilename = preg_replace("([\.]{2,})", '', $host);
+                $hostfilename = preg_replace("([^a-z0-9])", '', $host);
+                $cache_filename = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".html";
 
                 $context = stream_context_get_params($read_stream);
 
@@ -1359,9 +1374,11 @@
                       } else {
                         if ($key == 10) {
                           echo "<span class='text-danger'>Error: Certificate Chain to long.</span><br>.";
+                          $write_cache = 0;
                           continue;
                         }
                         if ($key > 10) {
+                          $write_cache = 0;
                           continue;
                         }
                         echo "<h2>Chain $key</h2>";
@@ -1376,7 +1393,8 @@
                 }
               }
             } else if (!empty($csr) && empty($host) ) {
-
+                
+              $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".html";
               if ( isset($_GET['json']) ) {
 
                 if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
@@ -1405,12 +1423,30 @@
             } else {
               echo "<span class='text-danger'> Host or Certificate required.</span>";
               echo "<hr>";
+              $write_cache = 0;
             }
           }
           ?>
+        
+      
+      <?php
+        if ($write_cache == 1) {
+        ?>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Saved result</h2>
+          </div>
+          <div class="panel-body">
+            <p>This result is saved at most 60 days on <a href="<?php echo htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0] . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
+          </div>
+        </div>
+        <?php
+        }
+        ?>
         </div>
       </div>
     </div>
+
     <?php
     if(empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
     ?>
@@ -1425,3 +1461,11 @@
 
   </body>
   </html>
+<?php
+if ($write_cache == 1) {
+  if (!file_exists($cache_filename)) {
+    file_put_contents($cache_filename, ob_get_contents());
+  }
+}
+
+?>

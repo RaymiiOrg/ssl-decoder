@@ -2,6 +2,9 @@
 
 ## 1.5
 
+- Fix bug in CSR page rendering
+
+- Add result page saving
 - Add AJAX form loader
 
 ## 1.4
