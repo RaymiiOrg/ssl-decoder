@@ -730,7 +730,7 @@
               echo "</td></tr>\n";
             }
             echo "</table>";
-            continue;
+            return;
           } else {
             $cert_data = openssl_x509_parse($raw_cert_data);
           }
