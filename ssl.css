@@ -1,3 +1,7 @@
+#preloader{
+    display:none;
+}
+
 .flag {
     width: 16px;
     height: 11px;

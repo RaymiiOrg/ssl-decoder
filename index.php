@@ -1,5 +1,5 @@
 <!--
-    Copyright (C) 2014 Remy van Elst
+    Copyright (C) 2015 Remy van Elst
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,14 +25,87 @@
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> 
   <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
   <link rel="stylesheet" href="ssl.css">
+  <script type="text/javascript">
+    var request = createRequestObject();
+    var dataReturn='';
+    var ajaxTimeout='';
+    var enterChecker=false;
+
+    function createRequestObject()
+    {
+        var ro;
+        var browser = navigator.appName;
+        if(browser == 'Microsoft Internet Explorer')
+        {
+            ro = new ActiveXObject('Microsoft.XMLHTTP');
+        }
+        else{
+            ro = new XMLHttpRequest();
+            ro.setRequestHeader('HTTP_X_REQUESTED_WITH', 'XMLHttpRequest');
+        }
+        return ro;
+    }
+
+    function makeRequest (url, fun)
+    {
+        enterChecker=false;
+        request.open('get', url);
+        request.onreadystatechange = function() { handleResponse(fun); }
+        
+        try{
+            request.send(null);
+            window.history.pushState('wut', 'SSL Decoder for ' + document.getElementById('host').value, '/ssl/?host=' + document.getElementById('host').value + '&port=' + document.getElementById('port').value + '&csr=' + document.getElementById('csr').value + '&s=');
+        }
+        catch(err){
+            alert('Error occured: '+err);
+            showElementbyID(false, 'preloader'); 
+            showElementbyID(false, 'resultDiv'); 
+            showElementbyID(true, 'sslform'); 
+        }
+    }
+
+
+    function handleResponse(fun) {
+        if(request.readyState < 4)
+        {
+            ajaxTimeout=setTimeout('handleResponse(\''+fun+'\')',10);
+        }
+        else if(request.readyState == 4 && !enterChecker)
+        {
+            enterChecker=true;
+            var response = request.responseText;
+            dataReturn=response;
+            
+            if(fun!='')
+                ajaxTimeout=setTimeout(fun+'()', 200);
+        }
+    }
+
+    function stopAjax()
+    {
+        clearTimeout('ajaxTimeout');
+        ajaxTimeout='';
+    }
+
+
+    function showContent(){
+        showElementbyID(false, 'preloader');
+        document.getElementById('resultDiv').innerHTML=dataReturn;
+    }
+
+    function showElementbyID(show, element){
+        if(show)
+            document.getElementById(element).style.display='block';
+        else
+            document.getElementById(element).style.display='none';
+    }
+
+</script>
 </head>
 <body>
   <a id="top-of-page"></a>
   <div class="container-fluid ">
-    <div class="row"><div class="col-md-10 col-md-offset-1">
-      <div class="page-header" >
-        <h1>SSL Decoder</h1>
-      </div>
+    <div class="row">
 
 
       <?php
@@ -1147,6 +1220,11 @@
 
           if ( !isset($_GET['host']) || !isset($_GET['csr']) ) {
             ?>
+            <div class="col-md-10 col-md-offset-1">
+              <div class="page-header" >
+                <h1>SSL Decoder</h1>
+            </div>
+            <div id='sslform'>
             <form class="form-horizontal">
               <p>Fill in either host + port or paste a CSR/Certficiate. Port defaults to 443.<br></p>
               <fieldset>
@@ -1186,16 +1264,28 @@
                 <div class="form-group">
                   <div class="col-md-4">
                     <label class="col-md-2 col-md-offset-1 control-label" for="s"></label>
-                    <button id="s" name="s" class="btn btn-primary">Submit</button>
+                    <button id="s" name="s" class="btn btn-primary" onsubmit="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=', 'showContent');return false" onclick="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=', 'showContent');return false">Submit</button>
                   </div>
                 </div>
 
               </fieldset>
             </form>
+        </div>
+        
+        <div id="preloader"><p><img src="ajax-loader.gif" /><br>The SSL Decoder is processing your request. Please wait a few moments.<br></p></div>
+
+        <div id="resultDiv"></div>
 
 
             <?php
           } else {
+            if(empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
+              ?><div class="col-md-10 col-md-offset-1">
+              <div class="page-header" >
+                <h1>SSL Decoder</h1>
+            </div>
+            <?
+          }
             $host = mb_strtolower(get($_GET['host']));
             $port = get($_GET['port'], '443');
             $csr = get($_GET['csr'], '');
@@ -1321,11 +1411,17 @@
         </div>
       </div>
     </div>
-
-    <div class="footer">
-      <div class="col-md-6 col-md-offset-1 container">
-        <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.4</p>
+    <?php
+    if(empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
+    ?>
+      <div class="footer">
+        <div class="col-md-6 col-md-offset-1 container">
+          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.5</p>
+        </div>
       </div>
-    </div>
+    <?php
+    }
+    ?>
+
   </body>
   </html>

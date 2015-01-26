@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5
+
+- Add AJAX form loader
+
 ## 1.4
 
 - Fix bug where HSTS and HPKP would not work if host was IP
