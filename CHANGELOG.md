@@ -3,7 +3,9 @@
 ## 1.5
 
 - Fix bug in CSR page rendering
+- Fix a few PHP warnings by better checking input parameters
 
+- Add PEM display of cert and pubkey
 - Add result page saving
 - Add AJAX form loader
 
