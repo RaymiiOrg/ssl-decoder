@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL & ~E_NOTICE);
 ob_start();
 $write_cache = 0;
 ?>
@@ -139,7 +140,9 @@ $write_cache = 0;
       }
       function endsWith($haystack, $needle) {
         // search forward starting from end minus needle length characters
-        return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
+        if(!empty($haystack)) {
+          return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
+        }
       }
 
       function ocsp_stapling($host, $port){
@@ -385,7 +388,8 @@ $write_cache = 0;
       }
       
       function ssl_conn_protocols($host, $port){
-
+        $old_error_reporting = error_reporting();
+        error_reporting($old_error_reporting ^ E_WARNING); 
         $results = array('sslv3' => false, 
                          'tlsv1.0' => false,
                          'tlsv1.1' => false,
@@ -446,7 +450,7 @@ $write_cache = 0;
         } else {
           $results['tlsv1.2'] = true;
         }
-
+        error_reporting($old_error_reporting);
         return $results;
       }
 
@@ -1161,19 +1165,24 @@ $write_cache = 0;
                 <td>Key Size / Type</td>
                 <td>
                   <?php
+                  
+
                   $key_details = openssl_pkey_get_details(openssl_pkey_get_public($raw_cert_data));
+                  $export_pem = "";
+                  openssl_x509_export($raw_cert_data, $export_pem);
 
                   if ( $key_details['rsa'] ) {
-                    echo $key_details['bits'];
+                    echo htmlspecialchars($key_details['bits']);
                     echo " bits RSA";
                   } else if ( $key_details['dsa'] ) {
-                    echo $key_details['bits'];
+                    echo htmlspecialchars($key_details['bits']);
                     echo " bits DSA";
                   } else if ( $key_details['dh'] ) {
-                    echo $key_details['bits'];
+                    echo htmlspecialchars($key_details['bits']);
                     echo " bits DH";
                   } else {
-                    "Unknown: <pre>" . var_dump(htmlspecialchars($key_details)) . "</pre>";
+                    echo htmlspecialchars(var_dump($key_details['bits']));
+                    echo " bits";
                   }
                   ?>
                 </td>
@@ -1217,6 +1226,68 @@ $write_cache = 0;
                       </div>
                     </td>
                   </tr>
+                  <?php 
+                   if(!empty($export_pem)) {
+                  ?>
+                  <tr>
+                <td>Certificate PEM </td>
+                <td>
+                  <div class="panel-group" id="pem-accordion<?php echo bcdechex($cert_data['serialNumber']); ?>" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                      <div class="panel-heading" role="tab" id="pem-heading<?php echo bcdechex($cert_data['serialNumber']); ?>">
+                        <h4 class="panel-title">
+                          <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>" aria-expanded="false" aria-controls="pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>">
+                            Click to Open/Close
+                          </a>
+                        </h4>
+                      </div>
+                      <div id="pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="pem-heading<?php echo bcdechex($cert_data['serialNumber']); ?>">
+                        <div class="panel-body">
+                          <?php 
+                          echo "<pre>";
+                          echo htmlspecialchars($export_pem);
+                          ?>
+                          </pre>
+                        </div>
+                      </div>
+                      </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <?php
+                  }
+                  ?>
+                  <?php 
+                   if(!empty($key_details['key'])) {
+                  ?>
+                  <tr>
+                <td>Public Key PEM </td>
+                <td>
+                  <div class="panel-group" id="pub-pem-accordion<?php echo bcdechex($cert_data['serialNumber']); ?>" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                      <div class="panel-heading" role="tab" id="pub-pem-heading<?php echo bcdechex($cert_data['serialNumber']); ?>">
+                        <h4 class="panel-title">
+                          <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#pub-pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>" aria-expanded="false" aria-controls="pub-pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>">
+                            Click to Open/Close
+                          </a>
+                        </h4>
+                      </div>
+                      <div id="pub-pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="pub-pem-heading<?php echo bcdechex($cert_data['serialNumber']); ?>">
+                        <div class="panel-body">
+                          <?php 
+                          echo "<pre>";
+                          echo htmlspecialchars($key_details['key']);
+                          ?>
+                          </pre>
+                        </div>
+                      </div>
+                      </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <?php
+                  }
+                  ?>
                 </tbody>
               </table>
               <?php
@@ -1306,7 +1377,7 @@ $write_cache = 0;
 
             if ( empty($csr) && !empty($host) ) {
 
-              echo "<strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong>";
+              echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong></p><br>";
 
               $stream = stream_context_create (array("ssl" => 
                 array("capture_peer_cert" => true,
@@ -1328,6 +1399,14 @@ $write_cache = 0;
                 $hostfilename = preg_replace("([\.]{2,})", '', $host);
                 $hostfilename = preg_replace("([^a-z0-9])", '', $host);
                 $cache_filename = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".html";
+
+
+                if ($write_cache == 1) {
+                ?>
+                <p>This result is saved at most 60 days on <a href="<?php echo htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0] . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
+                <?php
+                }
+
 
                 $context = stream_context_get_params($read_stream);
 
@@ -1412,7 +1491,7 @@ $write_cache = 0;
                 echo "</pre></p>";
 
               } else {
-                echo "<strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp; <br>";
+                echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p> <br>";
                 if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
                   echo "<h2>CSR </h2><p>";
                 } else {
