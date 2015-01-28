@@ -387,6 +387,29 @@ $write_cache = 0;
         }
       }
       
+      function ssl_conn_ciphersuites($host, $port, $ciphersuites){
+        $old_error_reporting = error_reporting();
+        error_reporting($old_error_reporting ^ E_WARNING); 
+        $results = array();
+        foreach ($ciphersuites as $value) {
+          $results[$value] = false;
+          $stream = stream_context_create (array("ssl" => 
+          array("verify_peer" => false,
+            "verify_peer_name" => false,
+            "allow_self_signed" => true,
+            'ciphers' => $value,
+            "sni_enabled" => true)));
+          $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
+          if ( $read_stream === false ) {
+            $results[$value] = false;
+          } else {
+            $results[$value] = true;
+          }
+        }
+        error_reporting($old_error_reporting);
+        return $results;
+      }
+
       function ssl_conn_protocols($host, $port){
         $old_error_reporting = error_reporting();
         error_reporting($old_error_reporting ^ E_WARNING); 
@@ -557,6 +580,122 @@ $write_cache = 0;
 
                   </td>
                 </tr>
+                <?php
+                  if ($_GET['ciphersuites'] == 1) {
+                ?>
+                <tr>
+                  <td>Ciphersuites supported by server</td>
+                  <td>
+                    <?php
+                      $ciphersuites_to_test = array('ECDHE-RSA-AES256-GCM-SHA384',
+                          'ECDHE-ECDSA-AES256-GCM-SHA384',
+                          'ECDHE-RSA-AES256-SHA384',
+                          'ECDHE-ECDSA-AES256-SHA384',
+                          'ECDHE-RSA-AES256-SHA',
+                          'ECDHE-ECDSA-AES256-SHA',
+                          'SRP-DSS-AES-256-CBC-SHA',
+                          'SRP-RSA-AES-256-CBC-SHA',
+                          'SRP-AES-256-CBC-SHA',
+                          'DHE-DSS-AES256-GCM-SHA384',
+                          'DHE-RSA-AES256-GCM-SHA384',
+                          'DHE-RSA-AES256-SHA256',
+                          'DHE-DSS-AES256-SHA256',
+                          'DHE-RSA-AES256-SHA',
+                          'DHE-DSS-AES256-SHA',
+                          'DHE-RSA-CAMELLIA256-SHA',
+                          'DHE-DSS-CAMELLIA256-SHA',
+                          'ECDH-RSA-AES256-GCM-SHA384',
+                          'ECDH-ECDSA-AES256-GCM-SHA384',
+                          'ECDH-RSA-AES256-SHA384',
+                          'ECDH-ECDSA-AES256-SHA384',
+                          'ECDH-RSA-AES256-SHA',
+                          'ECDH-ECDSA-AES256-SHA',
+                          'AES256-GCM-SHA384',
+                          'AES256-SHA256',
+                          'AES256-SHA',
+                          'CAMELLIA256-SHA',
+                          'PSK-AES256-CBC-SHA',
+                          'ECDHE-RSA-AES128-GCM-SHA256',
+                          'ECDHE-ECDSA-AES128-GCM-SHA256',
+                          'ECDHE-RSA-AES128-SHA256',
+                          'ECDHE-ECDSA-AES128-SHA256',
+                          'ECDHE-RSA-AES128-SHA',
+                          'ECDHE-ECDSA-AES128-SHA',
+                          'SRP-DSS-AES-128-CBC-SHA',
+                          'SRP-RSA-AES-128-CBC-SHA',
+                          'SRP-AES-128-CBC-SHA',
+                          'DHE-DSS-AES128-GCM-SHA256',
+                          'DHE-RSA-AES128-GCM-SHA256',
+                          'DHE-RSA-AES128-SHA256',
+                          'DHE-DSS-AES128-SHA256',
+                          'DHE-RSA-AES128-SHA',
+                          'DHE-DSS-AES128-SHA',
+                          'DHE-RSA-SEED-SHA',
+                          'DHE-DSS-SEED-SHA',
+                          'DHE-RSA-CAMELLIA128-SHA',
+                          'DHE-DSS-CAMELLIA128-SHA',
+                          'ECDH-RSA-AES128-GCM-SHA256',
+                          'ECDH-ECDSA-AES128-GCM-SHA256',
+                          'ECDH-RSA-AES128-SHA256',
+                          'ECDH-ECDSA-AES128-SHA256',
+                          'ECDH-RSA-AES128-SHA',
+                          'ECDH-ECDSA-AES128-SHA',
+                          'AES128-GCM-SHA256',
+                          'AES128-SHA256',
+                          'AES128-SHA',
+                          'SEED-SHA',
+                          'CAMELLIA128-SHA',
+                          'IDEA-CBC-SHA',
+                          'PSK-AES128-CBC-SHA',
+                          'ECDHE-RSA-RC4-SHA',
+                          'ECDHE-ECDSA-RC4-SHA',
+                          'ECDH-RSA-RC4-SHA',
+                          'ECDH-ECDSA-RC4-SHA',
+                          'RC4-SHA',
+                          'RC4-MD5',
+                          'PSK-RC4-SHA',
+                          'ECDHE-RSA-DES-CBC3-SHA',
+                          'ECDHE-ECDSA-DES-CBC3-SHA',
+                          'SRP-DSS-3DES-EDE-CBC-SHA',
+                          'SRP-RSA-3DES-EDE-CBC-SHA',
+                          'SRP-3DES-EDE-CBC-SHA',
+                          'EDH-RSA-DES-CBC3-SHA',
+                          'EDH-DSS-DES-CBC3-SHA',
+                          'ECDH-RSA-DES-CBC3-SHA',
+                          'ECDH-ECDSA-DES-CBC3-SHA',
+                          'DES-CBC3-SHA',
+                          'PSK-3DES-EDE-CBC-SHA',
+                          'EDH-RSA-DES-CBC-SHA',
+                          'EDH-DSS-DES-CBC-SHA',
+                          'DES-CBC-SHA',
+                          'EXP-EDH-RSA-DES-CBC-SHA',
+                          'EXP-EDH-DSS-DES-CBC-SHA',
+                          'EXP-DES-CBC-SHA',
+                          'EXP-RC2-CBC-MD5',
+                          'EXP-RC4-MD5' );
+                      $supported_ciphersuites = ssl_conn_ciphersuites($host, $port, $ciphersuites_to_test);
+                      
+                      foreach ($supported_ciphersuites as $key => $value) {
+                        if($value == true){
+                          echo "";
+                          echo "<span class='text-success glyphicon glyphicon-ok'></span> - ";
+                          echo htmlspecialchars($key);
+                          echo "<br>";
+                        } else {
+                          echo "<!-- ";
+                          echo "<span class='glyphicon glyphicon-remove'></span> - ";
+                          echo htmlspecialchars($key);
+                          echo " <br -->";
+                        }
+                        
+                      }
+                       
+                    ?>
+                  </td>
+                </tr>
+                <?php
+                  } else {
+                ?>
                 <tr>
                   <td>Ciphersuite</td>
                   <td>
@@ -567,7 +706,8 @@ $write_cache = 0;
                   </td>
                 </tr>
                 <?php
-                  $headers = server_http_headers($host, $port);
+                }
+                $headers = server_http_headers($host, $port);
                 ?>
                 <tr>
                   <td><a href="https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html">Strict Transport Security</a></td>
@@ -759,7 +899,7 @@ $write_cache = 0;
             echo "<table class='table'>\n";
             echo "<thead><tr>\n";
             echo "<th>Hostname</th>\n";
-            echo "<th>Expired</th>\n";
+            echo "<th>Not Expired</th>\n";
             echo "<th>Issuer</th>\n";
             echo "<th>CRL</th>\n";
             echo "<th>OCSP</th>\n";
@@ -1073,13 +1213,17 @@ $write_cache = 0;
 
                     $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
                     if ($ocsp_result["ocsp_verify_status"] == "good") { 
-                      echo '<span class="text-success glyphicon glyphicon-ok-sign"></span> - ';
+                      echo '<span class="text-success glyphicon glyphicon-ok-sign"></span> ';
                       echo '<span class="text-success">';
-                      echo "This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
-                      echo "Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
+                      echo htmlspecialchars($ocsp_uri);
+                      echo "<br>This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
+                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
                     } else if ( $ocsp_result["ocsp_verify_status"] == "revoked") {
-                      echo "This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
-                      echo "Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
+                      echo '<span class="text-danger glyphicon glyphicon-remove-sign"></span> - ';
+                      echo '<span class="text-danger">';
+                      echo htmlspecialchars($ocsp_uri);
+                      echo "<br>This update: " . htmlspecialchars($ocsp_result["This Update"]);
+                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
                     } else {
                       echo '<span class="text-danger glyphicon glyphicon-question-sign"></span>';
                       echo '<span class="text-danger">';
@@ -1315,6 +1459,16 @@ $write_cache = 0;
                     <input id="port" name="port" type="text" placeholder="443" class="form-control input-md">
                   </div>
                 </div>
+                <div class="form-group">
+                  <div class="col-md-4 col-md-offset-1">
+                    <div class="checkbox">
+                      <label for="ciphersuites">
+                        <input type="checkbox" name="ciphersuites" id="ciphersuites" value="1" checked="checked">
+                        Enumerate Ciphersuites (takes longer)
+                      </label>
+                    </div>
+                  </div>
+                </div>
 
                 <hr>
 
@@ -1325,22 +1479,10 @@ $write_cache = 0;
                   </div>
                 </div>
 
-
-                <div class="form-group">
-                  <div class="col-md-4 col-md-offset-1">
-                    <div class="checkbox">
-                      <label for="json">
-                        <input type="checkbox" name="json" id="json" value="json">
-                        Output JSON
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="form-group">
                   <div class="col-md-4">
                     <label class="col-md-2 col-md-offset-1 control-label" for="s"></label>
-                    <button id="s" name="s" class="btn btn-primary" onsubmit="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=', 'showContent');return false" onclick="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=', 'showContent');return false">Submit</button>
+                    <button id="s" name="s" class="btn btn-primary" onsubmit="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=', 'showContent');return false" onclick="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&ciphersuites=' + this.form.ciphersuites.value + '&s=', 'showContent');return false">Submit</button>
                   </div>
                 </div>
 
@@ -1348,7 +1490,7 @@ $write_cache = 0;
             </form>
         </div>
         
-        <div id="preloader"><p><img src="ajax-loader.gif" /><br>The SSL Decoder is processing your request. Please wait a few moments.<br></p></div>
+        <div id="preloader"><p><img src="ajax-loader.gif" /><br>&nbsp;<br>The SSL Decoder is processing your request. Please wait a few moments.<br></p></div>
 
         <div id="resultDiv"></div>
 
@@ -1415,21 +1557,6 @@ $write_cache = 0;
                 $cert_data = openssl_x509_parse($context["options"]["ssl"]["peer_certificate"]);
                 $chain_data = $context["options"]["ssl"]["peer_certificate_chain"];
 
-                if ( isset($_GET['json']) ) {
-                  foreach ($chain_data as $key=>$chain_cert) {
-                    if ( $key == 0) {
-                      echo "<p><h2>JSON Certificate</h2><pre>";
-                      print(htmlspecialchars(json_encode(openssl_x509_parse($chain_cert), JSON_PRETTY_PRINT)));
-                      echo "</pre></p>";
-
-                    } else {
-                      echo "<p><h2>JSON Chain ".$key."</h2><pre>";
-                      print(htmlspecialchars(json_encode(openssl_x509_parse($chain_cert), JSON_PRETTY_PRINT)));
-                      echo "</pre></p>";
-                    }
-                  }
-                } else {
-
                   if (!empty($chain_data)) {
 
                     $chain_length = count($chain_data);
@@ -1469,28 +1596,11 @@ $write_cache = 0;
                       }
                     }
                   }
-                }
               }
             } else if (!empty($csr) && empty($host) ) {
                 
               $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".html";
-              if ( isset($_GET['json']) ) {
 
-                if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
-                  echo "<h2>JSON CSR </h2><p><pre>";
-                  $cert_data = openssl_csr_get_public_key($csr);
-                  $cert_details = openssl_pkey_get_details($cert_data);
-                  $cert_key = $cert_details['key'];
-                  $cert_subject = openssl_csr_get_subject($csr);
-                  print htmlspecialchars(json_encode($cert_subject), JSON_PRETTY_PRINT);
-                } else {
-                  echo "<h2>JSON Certificate</h2><p><pre>";
-                  print htmlspecialchars(json_encode(openssl_x509_parse($csr), JSON_PRETTY_PRINT));
-                }
-
-                echo "</pre></p>";
-
-              } else {
                 echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p> <br>";
                 if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
                   echo "<h2>CSR </h2><p>";
@@ -1498,17 +1608,14 @@ $write_cache = 0;
                   echo "<h2>Certificate </h2><p>";
                 }
                 cert_parse($csr, null, true);
-              }
+              
             } else {
               echo "<span class='text-danger'> Host or Certificate required.</span>";
               echo "<hr>";
               $write_cache = 0;
             }
           }
-          ?>
-        
-      
-      <?php
+
         if ($write_cache == 1) {
         ?>
         <div class="panel panel-default">
@@ -1531,7 +1638,7 @@ $write_cache = 0;
     ?>
       <div class="footer">
         <div class="col-md-6 col-md-offset-1 container">
-          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.5</p>
+          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.6</p>
         </div>
       </div>
     <?php

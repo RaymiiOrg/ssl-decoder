@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6
+
+- Remove JSON output
+- Add ciphersuite enumeration
+
 ## 1.5
 
 - Fix bug in CSR page rendering
