@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7
+
+- Split code up in seperate files
+- Add SPKI hash
+
 ## 1.6
 
 - Remove JSON output

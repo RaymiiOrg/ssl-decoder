@@ -76,4 +76,14 @@ function cert_signature_algorithm($raw_cert_data) {
   return($signature_algorithm);
 }
 
+function spki_hash($raw_cert_data) {
+    global $random_blurp;
+    $tmp_dir = '/tmp/'; 
+    openssl_x509_export_to_file($raw_cert_data, $tmp_dir.$random_blurp.'.cert_client.pem'); 
+    $output = shell_exec('openssl x509 -noout -in '.$tmp_dir.$random_blurp.'.cert_client.pem  -pubkey | openssl asn1parse -noout -inform pem -out '.$tmp_dir.$random_blurp.'.public.key; openssl dgst -sha256 -binary '. $tmp_dir . $random_blurp . '.public.key | openssl enc -base64 2>&1');
+
+    unlink($tmp_dir.$random_blurp.'.cert_client.pem');
+    return(trim(htmlspecialchars($output)));
+}
+
 ?>

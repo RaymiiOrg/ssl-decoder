@@ -627,15 +627,25 @@
                       </div>
                       <div id="pub-pem-collapse<?php echo bcdechex($cert_data['serialNumber']); ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="pub-pem-heading<?php echo bcdechex($cert_data['serialNumber']); ?>">
                         <div class="panel-body">
-                          <?php 
-                          echo "<pre>";
-                          echo htmlspecialchars($key_details['key']);
+                        
+                          <?php
+                            echo "<pre>"; 
+                            echo htmlspecialchars($key_details['key']);
                           ?>
                           </pre>
                         </div>
                       </div>
                       </div>
                       </div>
+                    </td>
+                  </tr>
+                  <tr>
+                  <td><a href="https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html">SPKI Hash</a></td>
+                    <td>
+                        <?php 
+                            $spki_hash = spki_hash($export_pem);
+                            print(htmlspecialchars($spki_hash));
+                        ?>
                     </td>
                   </tr>
                   <?php
