@@ -31,11 +31,11 @@ foreach (glob("functions/*.php") as $filename) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SSL Decoder</title>
-  <link rel="stylesheet" href="/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/ssl.css">
-  <script src="/js/jquery.min.js"></script> 
-  <script src="/js/bootstrap.min.js"></script>
-  <script src="/js/ajax.js"></script>
+  <link rel="stylesheet" href="<?php echo(htmlspecialchars($current_folder)); ?>css/bootstrap.min.css">
+  <link rel="stylesheet" href="<?php echo(htmlspecialchars($current_folder)); ?>css/ssl.css">
+  <script src="<?php echo(htmlspecialchars($current_folder)); ?>js/jquery.min.js"></script> 
+  <script src="<?php echo(htmlspecialchars($current_folder)); ?>js/bootstrap.min.js"></script>
+  <script src="<?php echo(htmlspecialchars($current_folder)); ?>js/ajax.js"></script>
 </head>
 <body>
   <a id="top-of-page"></a>
@@ -97,7 +97,7 @@ foreach (glob("functions/*.php") as $filename) {
             </form>
         </div>
         
-        <div id="preloader"><p><img src="/img/ajax-loader.gif" /><br>&nbsp;<br>The SSL Decoder is processing your request. Please wait a few moments.<br></p></div>
+        <div id="preloader"><p><img src="<?php echo(htmlspecialchars($current_folder)); ?>img/ajax-loader.gif" /><br>&nbsp;<br>The SSL Decoder is processing your request. Please wait a few moments.<br></p></div>
 
         <div id="resultDiv"></div>
 
@@ -152,7 +152,7 @@ foreach (glob("functions/*.php") as $filename) {
 
                 if ($write_cache == 1) {
                 ?>
-                <p>This result is saved at most 60 days on <a href="<?php echo htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0] . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
+                <p>This result is saved at most 60 days on <a href="<?php echo(htmlspecialchars($current_folder) . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
                 <?php
                 }
 
@@ -230,7 +230,7 @@ foreach (glob("functions/*.php") as $filename) {
             <h2 class="panel-title">Saved result</h2>
           </div>
           <div class="panel-body">
-            <p>This result is saved at most 60 days on <a href="<?php echo htmlspecialchars(explode('?', $_SERVER['REQUEST_URI'], 2)[0] . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
+            <p>This result is saved at most 60 days on <a href="<?php echo(htmlspecialchars($current_folder) . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
           </div>
         </div>
         <?php
