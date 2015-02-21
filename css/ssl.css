@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .flag {
     width: 16px;
     height: 11px;
-    background:url("/img/flags.png") no-repeat
+    background:url("../img/flags.png") no-repeat
 }
 
 .flag.flag-ad {background-position: -16px 0}

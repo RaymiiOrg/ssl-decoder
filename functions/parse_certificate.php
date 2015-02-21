@@ -65,7 +65,7 @@
               switch ($key) {
                 case 'C':
                 echo htmlspecialchars($value);
-                echo ' <img src="blank.gif" class="flag flag-';
+                echo ' <img src="'.htmlspecialchars($current_folder) . 'img/blank.gif" class="flag flag-';
                 echo strtolower(htmlspecialchars($value)); 
                 echo '" alt="" />';
                 break;
@@ -225,7 +225,7 @@
                 switch ($key) {
                   case 'C':
                   echo htmlspecialchars($value);
-                  echo ' <img src="blank.gif" class="flag flag-';
+                  echo ' <img src="'.htmlspecialchars($current_folder) . 'img/blank.gif" class="flag flag-';
                   echo strtolower(htmlspecialchars($value)); 
                   echo '" alt="" />';
                   break;
@@ -325,7 +325,7 @@
                 switch ($key) {
                   case 'C':
                   echo htmlspecialchars($value);
-                  echo ' <img src="blank.gif" class="flag flag-';
+                  echo ' <img src="'.htmlspecialchars($current_folder) . 'img/blank.gif" class="flag flag-';
                   echo strtolower(htmlspecialchars($value)); 
                   echo '" alt="" />';
                   break;
