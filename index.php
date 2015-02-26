@@ -89,7 +89,7 @@ foreach (glob("functions/*.php") as $filename) {
                 <div class="form-group">
                   <div class="col-md-4">
                     <label class="col-md-2 col-md-offset-1 control-label" for="s"></label>
-                    <button id="s" name="s" class="btn btn-primary" onsubmit="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=', 'showContent');return false" onclick="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?host=' + this.form.host.value + '&port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&ciphersuites=' + this.form.ciphersuites.value + '&s=', 'showContent');return false">Submit</button>
+                    <button id="s" name="s" class="btn btn-primary" onsubmit="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&s=&host=' + this.form.host.value,, 'showContent');return false" onclick="showElementbyID(true, 'preloader'); showElementbyID(false, 'sslform'); makeRequest('/ssl/?port=' + this.form.port.value + '&csr=' + this.form.csr.value + '&ciphersuites=' + this.form.ciphersuites.value + '&s=&host=' + this.form.host.value, 'showContent');return false">Submit</button>
                   </div>
                 </div>
 

@@ -41,7 +41,7 @@ function makeRequest (url, fun)
     
     try{
         request.send(null);
-        window.history.pushState('wut', 'SSL Decoder for ' + document.getElementById('host').value, '/ssl/?host=' + document.getElementById('host').value + '&port=' + document.getElementById('port').value + '&csr=' + document.getElementById('csr').value + '&s=');
+        window.history.pushState('wut', 'SSL Decoder for ' + document.getElementById('host').value, '/ssl/?port=' + document.getElementById('port').value + '&csr=' + document.getElementById('csr').value + '&s=&host=' + document.getElementById('host').value);
     }
     catch(err){
         alert('Error occured: '+err);

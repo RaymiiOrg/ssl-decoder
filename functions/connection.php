@@ -142,6 +142,8 @@ function ssl_conn_ciphersuites($host, $port, $ciphersuites){
 
 
 function ssl_conn_metadata($host, $port, $chain=null) {
+  global $random_blurp;
+  global $current_folder;
 $stream = stream_context_create (array("ssl" => 
   array("verify_peer" => false,
     "capture_session_meta" => true,
@@ -171,22 +173,52 @@ if ( $read_stream === false ) {
              <td>Chain sent by Server (in server order)</td>
             <td style="font-family: monospace;">
             <?php
-            foreach ($chain as $key => $cert) {
-              if ( $key == 10) {
-                echo "<span class='text-danger'>Error: Certificate chain to large.</span><br>";
-                continue;
+            $chain_length = count($chain);
+            $certificate_chain = array();
+            if ($chain_length <= 10) {
+              for ($i = 0; $i < $chain_length; $i++) {
+                if (openssl_x509_parse($chain[$i])['issuer']['CN'] && openssl_x509_parse($chain[$i])['subject']['CN']) {
+                  echo "Name...........: <i>";
+                  echo htmlspecialchars(openssl_x509_parse($chain[$i])['subject']['CN']);
+                  echo " </i><br>Issued by......:<i> ";
+                  echo htmlspecialchars(openssl_x509_parse($chain[$i])['issuer']['CN']);
+                  echo "</i><br>";
+
+                  $export_pem = "";
+                  openssl_x509_export($chain[$i], $export_pem);
+                  array_push($certificate_chain, $export_pem);
+
+                  if (openssl_x509_parse($chain[$i])['issuer']['CN'] == openssl_x509_parse($chain[$i + 1])['subject']['CN']){
+                    continue;
+                  } else {
+                    if ($i != $chain_length - 1) {
+                      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Issuer does not match the next certificate CN. Chain order is probaby wrong.</span><br><br>";
+                    }
+                  }
+                }
               }
-              if ( $key > 10) {
-                continue;
-              }
-              if (openssl_x509_parse($cert)['issuer']['CN'] && openssl_x509_parse($cert)['subject']['CN']) {
-                echo "Name...........: <i>";
-                echo htmlspecialchars(openssl_x509_parse($cert)['subject']['CN']);
-                echo " </i><br>Issued by......:<i> ";
-                echo htmlspecialchars(openssl_x509_parse($cert)['issuer']['CN']);
-                echo "</i><br>";
-              }
+              echo "<br>";
+            } else {
+              echo "<span class='text-danger'>Error: Certificate chain to large.</span><br>";
             }
+
+            file_put_contents('/tmp/verify_cert.' . $random_blurp . '.pem', implode("\n", array_reverse($certificate_chain)).PHP_EOL , FILE_APPEND);
+
+            $verify_output = 0;
+            $verify_exit_code = 0;
+            $verify_exec = exec(escapeshellcmd('openssl verify -verbose -purpose any -CAfile ' . getcwd() . '/cacert.pem /tmp/verify_cert.' . $random_blurp . '.pem') . "| grep -v OK", $verify_output, $verify_exit_code);
+
+            if ($verify_exit_code != 1) {
+              echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Validating certificate chain failed:</span><br>";
+              echo "<pre>";
+              echo str_replace('/tmp/verify_cert.' . $random_blurp . '.pem: ', '', implode("\n", $verify_output));
+              echo "</pre>";
+            } else {
+              echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Sucessfully validated certificate chain.</span><br>";
+            }
+
+            unlink('/tmp/verify_cert.' . $random_blurp . '.pem');
+
                ?>
             </td>
           </tr>
@@ -369,14 +401,66 @@ if ( $read_stream === false ) {
                 'NULL-SHA256',
                 'NULL-SHA',
                 'NULL-MD5');
+
+              $bad_ciphersuites = array('ECDHE-RSA-DES-CBC3-SHA',
+                'ECDHE-ECDSA-DES-CBC3-SHA',
+                'EDH-RSA-DES-CBC3-SHA',
+                'EDH-DSS-DES-CBC3-SHA',
+                'DH-RSA-DES-CBC3-SHA',
+                'DH-DSS-DES-CBC3-SHA',
+                'ECDH-RSA-DES-CBC3-SHA',
+                'ECDH-ECDSA-DES-CBC3-SHA',
+                'DES-CBC3-SHA',
+                'EDH-RSA-DES-CBC-SHA',
+                'EDH-DSS-DES-CBC-SHA',
+                'DH-RSA-DES-CBC-SHA',
+                'DH-DSS-DES-CBC-SHA',
+                'DES-CBC-SHA',
+                'EXP-EDH-RSA-DES-CBC-SHA',
+                'EXP-EDH-DSS-DES-CBC-SHA',
+                'EXP-DH-RSA-DES-CBC-SHA',
+                'EXP-DH-DSS-DES-CBC-SHA',
+                'EXP-DES-CBC-SHA',
+                'EXP-EDH-RSA-DES-CBC-SHA',
+                'EXP-EDH-DSS-DES-CBC-SHA',
+                'EXP-DH-RSA-DES-CBC-SHA',
+                'EXP-DH-DSS-DES-CBC-SHA',
+                'EXP-DES-CBC-SHA',
+                'EXP-RC2-CBC-MD5',
+                'EXP-RC4-MD5',
+                'RC4-MD5',
+                'EXP-RC2-CBC-MD5',
+                'EXP-RC4-MD5',
+                'ECDHE-RSA-RC4-SHA',
+                'ECDHE-ECDSA-RC4-SHA',
+                'ECDH-RSA-RC4-SHA',
+                'ECDH-ECDSA-RC4-SHA',
+                'RC4-SHA',
+                'RC4-MD5',
+                'PSK-RC4-SHA',
+                'EXP-RC4-MD5',
+                'ECDHE-RSA-NULL-SHA',
+                'ECDHE-ECDSA-NULL-SHA',
+                'AECDH-NULL-SHA',
+                'RC4-SHA',
+                'RC4-MD5',
+                'ECDH-RSA-NULL-SHA',
+                'ECDH-ECDSA-NULL-SHA',
+                'NULL-SHA256',
+                'NULL-SHA',
+                'NULL-MD5');
               $supported_ciphersuites = ssl_conn_ciphersuites($host, $port, $ciphersuites_to_test);
-              
+  
               foreach ($supported_ciphersuites as $key => $value) {
                 if($value == true){
-                  echo "";
-                  echo "<span class='text-success glyphicon glyphicon-ok'></span> - ";
+                  if (in_array($key, $bad_ciphersuites)) {
+                    echo "";
+                    echo "<span class='text-danger glyphicon glyphicon-remove'> ";
+                  } else {
+                    echo "<span class='glyphicon glyphicon-minus'> ";
+                  }
                   echo htmlspecialchars($key);
-                  echo "<br>";
+                  echo "</span><br>";
                 } else {
                   echo "<!-- ";
                   echo "<span class='glyphicon glyphicon-remove'></span> - ";

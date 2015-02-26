@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8
+
+- Add certificate chain validation.
+- Make some chiphersuites red.
+
 ## 1.7
 
 - Split code up in seperate files
