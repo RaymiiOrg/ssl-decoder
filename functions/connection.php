@@ -471,7 +471,7 @@ if ( $read_stream === false ) {
               }
                
             ?>
-            <p>Ciphersuites containing <a href="https://en.wikipedia.org/wiki/Null_cipher">NULL</a>, <a href="https://en.wikipedia.org/wiki/Weak_key">DES and RC4</a> are marked RED because they are suboptimal.</p>
+            <p><br>Ciphersuites containing <a href="https://en.wikipedia.org/wiki/Null_cipher">NULL</a>, <a href="https://en.wikipedia.org/wiki/Weak_key">DES and RC4</a> are marked RED because they are suboptimal.</p>
           </td>
         </tr>
         <?php
