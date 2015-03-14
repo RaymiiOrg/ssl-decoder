@@ -4,6 +4,7 @@
 
 - Add certificate chain validation.
 - Make some chiphersuites red.
+- Fix issue with OCSP validation and HTTP 1.1 (StartCOM)
 
 ## 1.7
 
