@@ -1,10 +1,14 @@
 # Changelog
 
+## 1.9
+
+- Add navigation menu
+- Fix issue with OCSP validation and HTTP 1.1 (StartCOM)
+
 ## 1.8
 
 - Add certificate chain validation.
 - Make some chiphersuites red.
-- Fix issue with OCSP validation and HTTP 1.1 (StartCOM)
 
 ## 1.7
 

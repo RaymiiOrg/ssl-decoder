@@ -86,3 +86,8 @@ function showElementbyID(show, element){
     else
         document.getElementById(element).style.display='none';
 }
+
+function strStartsWith(str, prefix) {
+  return str.indexOf(prefix) === 0;
+}
+

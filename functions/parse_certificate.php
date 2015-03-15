@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+function get_cert_cn($raw_cert_data){
+  $cert_data = openssl_x509_parse($raw_cert_data);
+  if ($cert_data['subject']['CN']) {
+    return $cert_data['subject']['CN'];
+  }
+}
 
       function cert_parse($raw_cert_data, $raw_next_cert_data=null, $csr=false, $host=null, $port=null, $is_issuer=false) {
         global $random_blurp;

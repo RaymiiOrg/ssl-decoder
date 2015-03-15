@@ -38,13 +38,65 @@ foreach (glob("functions/*.php") as $filename) {
   <script src="<?php echo(htmlspecialchars($current_folder)); ?>js/ajax.js"></script>
 </head>
 <body>
+  <div id="wrapper">
   <a id="top-of-page"></a>
-  <div class="container-fluid ">
-    <div class="row">
-
-
+  <?php
+   if ( isset($_GET['host']) && !empty($_GET['host'])) {
+    $host = mb_strtolower(get($_GET['host']));
+    $port = get($_GET['port'], '443');
+    $csr = get($_GET['csr'], '');
+    if ( !is_numeric($port) ) {
+      $port = 443;
+    }
+    $stream = stream_context_create (array("ssl" => 
+      array("capture_peer_cert" => true,
+        "capture_peer_cert_chain" => true,
+        "verify_peer" => false,
+        "verify_peer_name" => false,
+        "allow_self_signed" => true,
+        "sni_enabled" => true)));
+      $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $stream);
+      if ( $read_stream !== false ) {
+        $context = stream_context_get_params($read_stream);
+        $chain_data = $context["options"]["ssl"]["peer_certificate_chain"];
+        $chain_length = count($chain_data);
+        if (!empty($chain_data) && $chain_length < 10) {
+    
+  ?>
+  <!-- Sidebar -->
+  <div id="sidebar-wrapper">
+    <nav>
+    <ul class="sidebar-nav">
+    <br>
+      <li class="sidebar-brand">
+        <h2>Navigation</h2>
+      </li>
+      <li><a href="#conndata"><strong>0</strong>: Connection Data</a></li>
       <?php
-
+        foreach ($chain_data as $key => $value) {
+          $nextkey = $key + 1;
+          echo "<li><a href='#cert".$nextkey."'><strong>".$nextkey."</strong> : ". htmlspecialchars(get_cert_cn($value)) ."</a></li>";
+        }
+      ?>
+      <li><hr></li>
+      <li><a href="https://cipherli.st/">Strong Cipherlists</a></li>
+      <li><a href="https://raymii.org/s/tutorials/Strong_SSL_Security_On_Apache2.html">Apache SSL Tutorial</a></li>
+      <li><a href="https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html">NGINX SSL Tutorial</a></li>
+      <li><a href="https://raymii.org/s/tutorials/Strong_SSL_Security_On_lighttpd.html">Lighttpd SSL Tutorial</a></li>
+      <li><a href="https://raymii.org">Raymii.org</a></li>
+    </ul>
+    </nav>
+  </div>
+  <!-- /#sidebar-wrapper -->
+        <?php
+          }
+        }
+      }
+        ?>
+<div id="page-content-wrapper">
+  <div class="container-fluid">
+    <div class="row">
+      <?php
           if ( !isset($_GET['host']) || !isset($_GET['csr']) ) {
             ?>
             <div class="col-md-10 col-md-offset-1">
@@ -105,24 +157,26 @@ foreach (glob("functions/*.php") as $filename) {
             <?php
           } else {
             if(empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-              ?><div class="col-md-10 col-md-offset-1">
+              ?> 
+              <div class="col-md-10 col-md-offset-1">
               <div class="page-header" >
                 <h1>SSL Decoder</h1>
             </div>
             <?php
-          $write_cache = 1;
-          if (!is_dir('results')) {
-            mkdir('results');
-          }
-          $epoch = date('U');
-          $random_bla = md5(uniqid(rand(), true));
-          }
-            $host = mb_strtolower(get($_GET['host']));
-            $port = get($_GET['port'], '443');
-            $csr = get($_GET['csr'], '');
-            if ( !is_numeric($port) ) {
-              $port = 443;
+            // set backwrite_ to 1 after debugging
+            $write_cache = 1;
+            if (!is_dir('results')) {
+              mkdir('results');
             }
+            $epoch = date('U');
+            $random_bla = md5(uniqid(rand(), true));
+          }
+          $host = mb_strtolower(get($_GET['host']));
+          $port = get($_GET['port'], '443');
+          $csr = get($_GET['csr'], '');
+          if ( !is_numeric($port) ) {
+            $port = 443;
+          }
 
             if ( empty($csr) && !empty($host) ) {
 
@@ -155,54 +209,55 @@ foreach (glob("functions/*.php") as $filename) {
                 <p>This result is saved at most 60 days on <a href="<?php echo(htmlspecialchars($current_folder) . $cache_filename); ?>">the following URL</a>. Do note that this might be deleted earlier if space runs out.</p>
                 <?php
                 }
-
-
                 $context = stream_context_get_params($read_stream);
-
                 $context_meta = stream_context_get_options($read_stream)['ssl']['session_meta'];
-
                 $cert_data = openssl_x509_parse($context["options"]["ssl"]["peer_certificate"]);
                 $chain_data = $context["options"]["ssl"]["peer_certificate_chain"];
+                if (!empty($chain_data)) {
+                  $chain_length = count($chain_data);
+                  $chain_arr_keys  = ($chain_data);
+                  foreach(array_keys($chain_arr_keys) as $key) {
+                    $curr = $chain_data[$key];
+                    $next = $chain_data[$key+1];
+                    $prev = $chain_data[$key-1];
 
-                  if (!empty($chain_data)) {
+                    if ($key == 0) {
 
-                    $chain_length = count($chain_data);
-                    $chain_arr_keys  = ($chain_data);
-                    foreach(array_keys($chain_arr_keys) as $key) {
-                      $curr = $chain_data[$key];
-                      $next = $chain_data[$key+1];
-                      $prev = $chain_data[$key-1];
+                      echo ssl_conn_metadata($host, $port, $chain_data);
+                      echo "<div class='content'><section id='cert1'>";
+                      echo "<header><h2 class='sticky'>Certificate for '". htmlspecialchars($host) ."'</h2></header>";
 
-                      if ($key == 0) {
-
-                        echo ssl_conn_metadata($host, $port, $chain_data);
-
-                        echo "<h2>Certificate for '". htmlspecialchars($host) ."'</h2>";
-
-                        if ( $chain_length > $key) {
-                          cert_parse($curr, $next, false, $host, $port, false);
-                        } else {
-                          cert_parse($curr, null, false, $host, $port, false);
-                        }
+                      if ( $chain_length > $key) {
+                        cert_parse($curr, $next, false, $host, $port, false);
                       } else {
-                        if ($key == 10) {
-                          echo "<span class='text-danger'>Error: Certificate Chain to long.</span><br>.";
-                          $write_cache = 0;
-                          continue;
-                        }
-                        if ($key > 10) {
-                          $write_cache = 0;
-                          continue;
-                        }
-                        echo "<h2>Chain $key</h2>";
-                        if ( $chain_length > $key) {
-                          cert_parse($curr, $next, false, null, null, true);
-                        } else {
-                          cert_parse($curr, null, false, null, null, true);
-                        }
+                        cert_parse($curr, null, false, $host, $port, false);
                       }
+                      echo "</section></div>";
+                    } else {
+                      if ($key == 10) {
+                        echo "<span class='text-danger'>Error: Certificate Chain to long.</span><br>.";
+                        $write_cache = 0;
+                        continue;
+                      }
+                      if ($key > 10) {
+                        $write_cache = 0;
+                        continue;
+                      }
+                      $nextkey = $key + 1;
+                      echo "<div class='content'><section id='cert" . $nextkey . "'>";
+                      echo "<header><h2 class='sticky'>Chain $key - " . htmlspecialchars(get_cert_cn($curr)) . "</h2></header>";
+                      
+                      if ( $chain_length > $key) {
+                        cert_parse($curr, $next, false, null, null, true);
+                      } else {
+                        cert_parse($curr, null, false, null, null, true);
+                      }
+                      echo "</section></div>";
                     }
+
                   }
+                }
+
               }
             } else if (!empty($csr) && empty($host) ) {
                 
@@ -210,9 +265,9 @@ foreach (glob("functions/*.php") as $filename) {
 
                 echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p> <br>";
                 if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
-                  echo "<h2>CSR </h2><p>";
+                  echo "<header><h2>CSR </h2></header><p>";
                 } else {
-                  echo "<h2>Certificate </h2><p>";
+                  echo "<header><h2>Certificate </h2></header><p>";
                 }
                 cert_parse($csr, null, true);
               
@@ -245,12 +300,57 @@ foreach (glob("functions/*.php") as $filename) {
     ?>
       <div class="footer">
         <div class="col-md-6 col-md-offset-1 container">
-          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.8</p>
+          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU GPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.9</p>
         </div>
       </div>
+    </div>
+  </div>
     <?php
     }
     ?>
+
+
+<script>
+    
+    $(document).ready(function(){
+        var aChildren = $("nav li").children(); // find the a children of the list items
+        var aArray = []; // create the empty aArray
+        for (var i=0; i < aChildren.length; i++) {    
+            var aChild = aChildren[i];
+            var ahref = $(aChild).attr('href');
+            if(ahref && strStartsWith(ahref, "#") ) {
+              aArray.push(ahref);
+            }
+        } // this for loop fills the aArray with attribute href values
+        
+        $(window).scroll(function(){
+
+            var windowPos = $(window).scrollTop(); // get the offset of the window from the top of page
+            var windowHeight = $(window).height(); // get the height of the window
+            var docHeight = $(document).height();
+            
+            for (var i=0; i < aArray.length; i++) {
+                var theID = aArray[i];
+                var divPos = $(theID).offset().top; // get the offset of the div from the top of page
+                var divHeight = $(theID).height(); // get the height of the div in question
+                if (windowPos >= divPos && windowPos < (divPos + divHeight)) {
+                    $("a[href='" + theID + "']").addClass("nav-active");
+                } else {
+                    $("a[href='" + theID + "']").removeClass("nav-active");
+                }
+            }
+            
+            if(windowPos + windowHeight == docHeight) {
+                if (!$("nav li:last-child a").hasClass("nav-active")) {
+                    var navActiveCurrent = $(".nav-active").attr("href");
+                    $("a[href='" + navActiveCurrent + "']").removeClass("nav-active");
+                    $("nav li:last-child a").addClass("nav-active");
+                }
+            }
+        });
+    });
+
+</script>
 
   </body>
   </html>

@@ -69,10 +69,6 @@ function ssl_conn_ciphersuites($host, $port, $ciphersuites){
         return $results;
       }
 
-
-
-
-
       function ssl_conn_protocols($host, $port){
         $old_error_reporting = error_reporting();
         error_reporting($old_error_reporting ^ E_WARNING); 
@@ -160,6 +156,7 @@ if ( $read_stream === false ) {
 
   if ($context_meta) { 
     ?>
+    <section id="conndata">
     <h3>Connection Data</h3>
     <table class="table table-striped table-bordered">
       <tbody>
@@ -287,6 +284,7 @@ if ( $read_stream === false ) {
                 'ECDHE-ECDSA-AES256-GCM-SHA384',
                 'ECDHE-RSA-AES256-SHA384',
                 'ECDHE-ECDSA-AES256-SHA384',
+    'TLS_FALLBACK_SCSV',
                 'ECDHE-RSA-AES256-SHA',
                 'ECDHE-ECDSA-AES256-SHA',
                 'SRP-DSS-AES-256-CBC-SHA',
@@ -454,6 +452,7 @@ if ( $read_stream === false ) {
               foreach ($supported_ciphersuites as $key => $value) {
                 if($value == true){
                   if (in_array($key, $bad_ciphersuites)) {
+                    $bad_ciphersuite = 1;
                     echo "";
                     echo "<span class='text-danger glyphicon glyphicon-remove'> ";
                   } else {
@@ -465,13 +464,16 @@ if ( $read_stream === false ) {
                   echo "<!-- ";
                   echo "<span class='glyphicon glyphicon-remove'></span> - ";
                   echo htmlspecialchars($key);
-                  echo " <br> -->";
+                  echo " <br -->";
                 }
-                
+              }
+            if ($bad_ciphersuite) {
+                ?>
+                <p><br>Ciphersuites containing <a href="https://en.wikipedia.org/wiki/Null_cipher">NULL</a>, <a href="https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States">EXP(ort)</a>, <a href="https://en.wikipedia.org/wiki/Weak_key">DES and RC4</a> are marked RED because they are suboptimal.</p>
+                <?php               
               }
                
             ?>
-            <p><br>Ciphersuites containing <a href="https://en.wikipedia.org/wiki/Null_cipher">NULL</a>, <a href="https://en.wikipedia.org/wiki/Weak_key">DES and RC4</a> are marked RED because they are suboptimal.</p>
           </td>
         </tr>
         <?php
@@ -572,6 +574,7 @@ if ( $read_stream === false ) {
         </tr>
       </tbody>
     </table>
+    </section>
     <?php
   } else {
     return false;
