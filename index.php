@@ -78,6 +78,7 @@ foreach (glob("functions/*.php") as $filename) {
           echo "<li><a href='#cert".$nextkey."'><strong>".$nextkey."</strong> : ". htmlspecialchars(get_cert_cn($value)) ."</a></li>";
         }
       ?>
+      <li><a href="<?php echo(htmlspecialchars($current_folder)); ?>">Try another website</a></li>
       <li><hr></li>
       <li><a href="https://cipherli.st/">Strong Cipherlists</a></li>
       <li><a href="https://raymii.org/s/tutorials/Strong_SSL_Security_On_Apache2.html">Apache SSL Tutorial</a></li>
