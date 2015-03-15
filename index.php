@@ -166,7 +166,7 @@ foreach (glob("functions/*.php") as $filename) {
             </div>
             <?php
             // set back to 1 after debugging
-            $write_cache = 0;
+            $write_cache = 1;
             if (!is_dir('results')) {
               mkdir('results');
             }
