@@ -38,10 +38,11 @@ foreach (glob("functions/*.php") as $filename) {
   <script src="<?php echo(htmlspecialchars($current_folder)); ?>js/ajax.js"></script>
 </head>
 <body>
-  <div id="wrapper">
+  
   <a id="top-of-page"></a>
   <?php
    if ( isset($_GET['host']) && !empty($_GET['host'])) {
+    echo '<div id="wrapper">';
     $host = mb_strtolower(get($_GET['host']));
     $port = get($_GET['port'], '443');
     $csr = get($_GET['csr'], '');
@@ -164,8 +165,8 @@ foreach (glob("functions/*.php") as $filename) {
                 <h1>SSL Decoder</h1>
             </div>
             <?php
-            // set backwrite_ to 1 after debugging
-            $write_cache = 1;
+            // set back to 1 after debugging
+            $write_cache = 0;
             if (!is_dir('results')) {
               mkdir('results');
             }
