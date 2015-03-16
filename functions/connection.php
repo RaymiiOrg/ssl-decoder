@@ -454,12 +454,12 @@ if ( $read_stream === false ) {
                   if (in_array($key, $bad_ciphersuites)) {
                     $bad_ciphersuite = 1;
                     echo "";
-                    echo "<span class='text-danger glyphicon glyphicon-remove'> ";
+                    echo "<span class='text-danger glyphicon glyphicon-remove'></span> ";
                   } else {
-                    echo "<span class='glyphicon glyphicon-minus'> ";
+                    echo "<span class='glyphicon glyphicon-minus'></span> ";
                   }
                   echo htmlspecialchars($key);
-                  echo "</span><br>";
+                  echo "<br>";
                 } else {
                   echo "<!-- ";
                   echo "<span class='glyphicon glyphicon-remove'></span> - ";
