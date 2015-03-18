@@ -83,6 +83,7 @@ function spki_hash($raw_cert_data) {
     $output = shell_exec('openssl x509 -noout -in '.$tmp_dir.$random_blurp.'.cert_client.pem  -pubkey | openssl asn1parse -noout -inform pem -out '.$tmp_dir.$random_blurp.'.public.key; openssl dgst -sha256 -binary '. $tmp_dir . $random_blurp . '.public.key | openssl enc -base64 2>&1');
 
     unlink($tmp_dir.$random_blurp.'.cert_client.pem');
+    unlink($tmp_dir.$random_blurp.'.public.key');
     return(trim(htmlspecialchars($output)));
 }
 

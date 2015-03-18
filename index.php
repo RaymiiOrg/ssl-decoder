@@ -43,8 +43,14 @@ foreach (glob("functions/*.php") as $filename) {
   <?php
    if ( isset($_GET['host']) && !empty($_GET['host'])) {
     echo '<div id="wrapper">';
-    $host = mb_strtolower(get($_GET['host']));
-    $port = get($_GET['port'], '443');
+    $hostname = mb_strtolower(get($_GET['host']));
+    $host = parse_hostname($hostname);
+    if ($host['port']) {
+      $port = $host['port'];
+    } else {
+      $port = get($_GET['port'], '443');
+    }
+    $host = $host['hostname'];
     $csr = get($_GET['csr'], '');
     if ( !is_numeric($port) ) {
       $port = 443;
@@ -173,8 +179,14 @@ foreach (glob("functions/*.php") as $filename) {
             $epoch = date('U');
             $random_bla = md5(uniqid(rand(), true));
           }
-          $host = mb_strtolower(get($_GET['host']));
-          $port = get($_GET['port'], '443');
+          $hostname = mb_strtolower(get($_GET['host']));
+          $host = parse_hostname($hostname);
+          if ($host['port']) {
+            $port = $host['port'];
+          } else {
+            $port = get($_GET['port'], '443');
+          }
+          $host = $host['hostname'];
           $csr = get($_GET['csr'], '');
           if ( !is_numeric($port) ) {
             $port = 443;

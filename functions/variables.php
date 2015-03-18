@@ -21,4 +21,22 @@ $ev_oids = array("1.3.6.1.4.1.34697.2.1", "1.3.6.1.4.1.34697.2.2", "1.3.6.1.4.1.
 
 $current_folder = get_current_folder();
 
+function parse_hostname($u_hostname){
+    # format raymii.org:8080 should auto parse port.
+    # parts[0]=hostname, parts[1]=port
+    $port = 0;
+    $hostname = 0;
+    $parts = explode(":", $u_hostname);
+    if ((1 <= $parts[1]) && ($parts[1] <= 65535)) {
+        $parts[1] = preg_replace('/\\s+/', '', $parts[1]);
+        $parts[1] = preg_replace('/[^A-Za-z0-9\._-]/', '', $parts[1]);
+        $port = mb_strtolower($parts[1]);
+    }
+    $parts[0] = preg_replace('/\\s+/', '', $parts[0]);
+    $parts[0] = preg_replace('/[^A-Za-z0-9\.-]/', '', $parts[0]);
+    $hostname = mb_strtolower($parts[0]);
+    $result = array('hostname' => $hostname, 'port' => $port);
+    return $result;
+}
+
 ?>

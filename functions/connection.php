@@ -225,12 +225,14 @@ if ( $read_stream === false ) {
           if ( fixed_gethostbyname($host) ) {
         ?>
         <tr>
-          <td>IP / Hostname</td>
+          <td>IP / Hostname / Port</td>
           <td>
             <?php 
-              echo fixed_gethostbyname($host);
+              echo htmlspecialchars(fixed_gethostbyname($host));
               echo " - ";
-              echo gethostbyaddr(fixed_gethostbyname($host));
+              echo htmlspecialchars(gethostbyaddr(fixed_gethostbyname($host)));
+              echo " - ";
+              echo htmlspecialchars($port);
             ?>
           </td>
         </tr>
