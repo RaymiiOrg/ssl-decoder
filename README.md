@@ -4,11 +4,17 @@ Simple PHP script which decodes an SSL connection or certificate and displays in
 
 ### Features
 
+- Connection information
 - Decodes CSR
 - Decodes Certificates
 - Decodes SSL Connections
 - SSL Protocol version tester
 - OCSP validation
+- OCSP Stapling
+- HSTS & HPKP headers
+- SPKI hash
+- Public Key PEM
+- Certificate PEM
 - CRL validation
 - Full certificate chain validation.
 - Issuer validation
@@ -28,4 +34,4 @@ See [https://z1s.org/ssl/](https://z1s.org/ssl/).
 
 ### License
 
-GPLv3
+GNU Affero GPL v3: [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
