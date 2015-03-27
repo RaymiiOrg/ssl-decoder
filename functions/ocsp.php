@@ -68,7 +68,7 @@ function ocsp_verify($raw_cert_data, $raw_next_cert_data) {
     // Some OCSP's want HTTP/1.1 but OpenSSL does not do that. Add Host header as workaround.
     $ocsp_host = parse_url($ocsp_uri, PHP_URL_HOST);
 
-    #echo htmlspecialchars('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
+    //echo '<pre>' . htmlspecialchars('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1') . '</pre>';
 
     $output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
     $filter_output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem"');
@@ -81,13 +81,15 @@ function ocsp_verify($raw_cert_data, $raw_next_cert_data) {
     $ocsp_status_lines = array_map('trim', $ocsp_status_lines);
     foreach($ocsp_status_lines as $line) {
         if(endsWith($line, ":") == false) {
-            list($k, $v) = explode(":", $line);
+            list($k, $v) = explode(":", $line, 2);
             $lines[trim($k)] = trim($v);
         }
     }  
 
     $result = array("This Update" => $lines["This Update"],
         "Next Update" => $lines["Next Update"],
+        "Reason" => $lines["Reason"],
+        "Revocation Time" => $lines["Revocation Time"],
         "ocsp_verify_status" => $lines[$tmp_dir . $random_blurp . ".cert_client.pem"]);
     if ($result["ocsp_verify_status"] == "good") { 
         $result["good"] = $filter_output;

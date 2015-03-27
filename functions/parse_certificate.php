@@ -436,7 +436,9 @@ function get_cert_cn($raw_cert_data){
                       echo '<span class="text-danger"> - REVOKED: ';
                       echo htmlspecialchars($ocsp_uri);
                       echo "</span><br><pre>This update: " . htmlspecialchars($ocsp_result["This Update"]);
-                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</pre>";
+                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]);
+                      echo "<br>Revocation Time: " . htmlspecialchars($ocsp_result["Revocation Time"]);
+                      echo "<br>Revocation Reason: " . htmlspecialchars($ocsp_result["Reason"]). "</pre>";
                     } else {
                       echo '<span class="text-danger glyphicon glyphicon-question-sign"></span>';
                       echo '<span class="text-danger"> - UNKNOWN: ';
