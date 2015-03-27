@@ -37,6 +37,10 @@ function crl_verify($raw_cert_data, $verbose=true) {
                 $ch = curl_init(($uri));
                 curl_setopt($ch, CURLOPT_TIMEOUT, 5);
                 curl_setopt($ch, CURLOPT_FILE, $fp);
+                curl_setopt($ch, CURLOPT_FAILONERROR, true);
+                curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
                 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
                 if(curl_exec($ch) === false)
                 {
