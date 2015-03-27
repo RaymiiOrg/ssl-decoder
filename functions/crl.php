@@ -43,16 +43,16 @@ function crl_verify($raw_cert_data, $verbose=true) {
                     echo '<pre>Curl error: ' . htmlspecialchars(curl_error($ch)) ."</pre>";
                 }
                 curl_close($ch);
-                if(stat("/tmp/" . $random_blurp .  "." . $key . ".crl")['size'] < 10 ) {
+                if(stat("/tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl")['size'] < 10 ) {
                     return false;
                 } 
-                $crl_text = shell_exec("openssl crl -noout -text -inform der -in /tmp/" . $random_blurp .  "." . $key . ".crl 2>&1");
+                $crl_text = shell_exec("openssl crl -noout -text -inform der -in /tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl 2>&1");
 
-                $crl_last_update = shell_exec("openssl crl -noout -lastupdate -inform der -in /tmp/" . $random_blurp .  "." . $key . ".crl");
+                $crl_last_update = shell_exec("openssl crl -noout -lastupdate -inform der -in /tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl");
 
-                $crl_next_update = shell_exec("openssl crl -noout -nextupdate -inform der -in /tmp/" . $random_blurp .  "." . $key . ".crl");
+                $crl_next_update = shell_exec("openssl crl -noout -nextupdate -inform der -in /tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl");
 
-                unlink("/tmp/" . $random_blurp .  "." . $key . ".crl");
+                unlink("/tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl");
 
                 if ( strpos($crl_text, "unable to load CRL") === 0 ) {
                     if ( $verbose ) {

@@ -4,6 +4,17 @@ Simple PHP script which decodes an SSL connection or certificate and displays in
 
 ### Features
 
+* Tries to give all the information you need instead of a rating. 
+* Open source, so you can self host it. 
+* Shows the entire certificate chain. 
+* Allows to paste a CRL/Cert
+* Validates the certificate, chain, CRL and OCSP (of every cert in the chain)
+* Has easy copy-pastable PEM versions of certs
+* Ciphersuite enumeration as an option.
+* Fast.
+
+### Features
+
 - Connection information
 - Decodes CSR
 - Decodes Certificates
