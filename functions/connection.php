@@ -42,6 +42,7 @@ function server_http_headers($host, $port){
         );
     $headers = get_headers("https://$host:$port", 1);
     if (!empty($headers)) {
+        $headers = array_change_key_case($headers, CASE_LOWER);
         return $headers;
     }
 }
@@ -498,12 +499,12 @@ if ( $read_stream === false ) {
           <td><a href="https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html">Strict Transport Security</a></td>
           <td>
             <?php 
-            if ( $headers["Strict-Transport-Security"] ) {
-              if ( is_array($headers["Strict-Transport-Security"])) {
-                echo htmlspecialchars(substr($headers["Strict-Transport-Security"][0], 0, 50));
+            if ( $headers["strict-transport-security"] ) {
+              if ( is_array($headers["strict-transport-security"])) {
+                echo htmlspecialchars(substr($headers["strict-transport-security"][0], 0, 50));
                 echo "<br > <i>HSTS header was found multiple times. Only showing the first one.</i>";
               } else {
-                echo htmlspecialchars(substr($headers["Strict-Transport-Security"], 0, 50));
+                echo htmlspecialchars(substr($headers["strict-transport-security"], 0, 50));
               }
             } else {
               echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
@@ -515,25 +516,25 @@ if ( $read_stream === false ) {
           <td><a href="https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html">HTTP Public Key Pinning Extension (HPKP)</a></td>
           <td>
             <?php 
-            if ( $headers["Public-Key-Pins"] ) {
-              if ( is_array($headers["Public-Key-Pins"])) {
-                echo htmlspecialchars(substr($headers["Public-Key-Pins"][0], 0, 255));
+            if ( $headers["public-key-pins"] ) {
+              if ( is_array($headers["public-key-pins"])) {
+                echo htmlspecialchars(substr($headers["public-key-pins"][0], 0, 255));
                 echo "<br > <i>HPKP header was found multiple times. Only showing the first one.</i>";
               } else {
-                echo htmlspecialchars(substr($headers["Public-Key-Pins"], 0, 255));
+                echo htmlspecialchars(substr($headers["public-key-pins"], 0, 255));
               }
             } else {
               echo '<span>Not Set</span>';
             }
             ?>
             <?php 
-            if ( $headers["Public-Key-Pins-Report-Only"] ) {
+            if ( $headers["public-key-pins-report-only"] ) {
               echo "<b>Report Only</b>: ";
-              if ( is_array($headers["Public-Key-Pins-Report-Only"])) {
-                echo htmlspecialchars(substr($headers["Public-Key-Pins-Report-Only"][0], 0, 255));
+              if ( is_array($headers["public-key-pins-report-only"])) {
+                echo htmlspecialchars(substr($headers["public-key-pins-report-only"][0], 0, 255));
                 echo "<br > <i>HPKP Report Only header was found multiple times. Only showing the first one.</i>";
               } else {
-                echo htmlspecialchars(substr($headers["Public-Key-Pins-Report-Only"], 0, 255));
+                echo htmlspecialchars(substr($headers["public-key-pins-report-only"], 0, 255));
               }
             } 
             ?>
