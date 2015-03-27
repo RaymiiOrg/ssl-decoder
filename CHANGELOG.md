@@ -3,10 +3,11 @@
 ## 1.9
 
 - Add navigation menu
+- Add green color if HSTS/HPKP headers are available.
+- Partial fix to make IDN's work instead of fail.
 - Fix issue with OCSP validation and HTTP 1.1 (StartCOM)
 - Fix CRL validation issue for self signed CRL URI's
 - Fix http header case sensitive validation (HSTS, HPKP)
-- Add green color if HSTS/HPKP headers are available.
 - Relicense under Affero GPL
 
 ## 1.8

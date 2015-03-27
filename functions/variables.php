@@ -32,6 +32,9 @@ function parse_hostname($u_hostname){
         $parts[1] = preg_replace('/[^A-Za-z0-9\._-]/', '', $parts[1]);
         $port = mb_strtolower($parts[1]);
     }
+    if (idn_to_ascii($parts[0])) {
+        $parts[0] = idn_to_ascii($parts[0]);
+    }
     $parts[0] = preg_replace('/\\s+/', '', $parts[0]);
     $parts[0] = preg_replace('/[^A-Za-z0-9\.-]/', '', $parts[0]);
     $hostname = mb_strtolower($parts[0]);
