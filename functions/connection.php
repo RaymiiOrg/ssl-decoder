@@ -500,12 +500,14 @@ if ( $read_stream === false ) {
           <td>
             <?php 
             if ( $headers["strict-transport-security"] ) {
+              echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
               if ( is_array($headers["strict-transport-security"])) {
                 echo htmlspecialchars(substr($headers["strict-transport-security"][0], 0, 50));
                 echo "<br > <i>HSTS header was found multiple times. Only showing the first one.</i>";
               } else {
                 echo htmlspecialchars(substr($headers["strict-transport-security"], 0, 50));
               }
+              echo "</span>";
             } else {
               echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
             }
@@ -517,9 +519,11 @@ if ( $read_stream === false ) {
           <td>
             <?php 
             if ( $headers["public-key-pins"] ) {
+              echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
               if ( is_array($headers["public-key-pins"])) {
                 echo htmlspecialchars(substr($headers["public-key-pins"][0], 0, 255));
                 echo "<br > <i>HPKP header was found multiple times. Only showing the first one.</i>";
+              echo "</span>";
               } else {
                 echo htmlspecialchars(substr($headers["public-key-pins"], 0, 255));
               }
