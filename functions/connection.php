@@ -36,11 +36,12 @@ function server_http_headers($host, $port){
                 "allow_self_signed" => true,
                 "sni_enabled" => true),
             'http' => array(
-                'method' => 'HEAD'
+                'method' => 'GET'
                 )
             )
         );
     $headers = get_headers("https://$host:$port", 1);
+
     if (!empty($headers)) {
         $headers = array_change_key_case($headers, CASE_LOWER);
         return $headers;
@@ -588,12 +589,6 @@ if ( $read_stream === false ) {
   }
 }
 }
-
-
-
-
-
-
 
 
 ?>
