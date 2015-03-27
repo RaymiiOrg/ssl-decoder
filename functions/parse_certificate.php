@@ -425,23 +425,21 @@ function get_cert_cn($raw_cert_data){
                   $ocsp_uri = explode(" ", $ocsp_uri)[0];
 
                   if ( isset($raw_next_cert_data) && !empty($ocsp_uri) ) {
-
-                    $ocsp_result = ocsp_verify($raw_cert_data, $raw_next_cert_data);
                     if ($ocsp_result["ocsp_verify_status"] == "good") { 
                       echo '<span class="text-success glyphicon glyphicon-ok-sign"></span> ';
-                      echo '<span class="text-success">';
+                      echo '<span class="text-success"> - OK: ';
                       echo htmlspecialchars($ocsp_uri);
-                      echo "<br>This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
-                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
+                      echo "</span><br><pre>This update: " . htmlspecialchars($ocsp_result["This Update"]) . " - ";
+                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</pre>";
                     } else if ( $ocsp_result["ocsp_verify_status"] == "revoked") {
-                      echo '<span class="text-danger glyphicon glyphicon-remove-sign"></span> - ';
-                      echo '<span class="text-danger">';
+                      echo '<span class="text-danger glyphicon glyphicon-remove-sign"></span>';
+                      echo '<span class="text-danger"> - REVOKED: ';
                       echo htmlspecialchars($ocsp_uri);
-                      echo "<br>This update: " . htmlspecialchars($ocsp_result["This Update"]);
-                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</span>";
+                      echo "</span><br><pre>This update: " . htmlspecialchars($ocsp_result["This Update"]);
+                      echo "<br>Next update: " . htmlspecialchars($ocsp_result["Next Update"]) . "</pre>";
                     } else {
                       echo '<span class="text-danger glyphicon glyphicon-question-sign"></span>';
-                      echo '<span class="text-danger">';
+                      echo '<span class="text-danger"> - UNKNOWN: ';
 
                       echo " - " . htmlspecialchars($ocsp_uri) . "</span><br>";
                       echo "<pre>" . htmlspecialchars($ocsp_result["unknown"]) . "</pre>";
