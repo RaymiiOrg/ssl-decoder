@@ -62,7 +62,7 @@ foreach (glob("functions/*.php") as $filename) {
         "verify_peer_name" => false,
         "allow_self_signed" => true,
         "sni_enabled" => true)));
-      $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $stream);
+      $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
       if ( $read_stream !== false ) {
         $context = stream_context_get_params($read_stream);
         $chain_data = $context["options"]["ssl"]["peer_certificate_chain"];
@@ -204,7 +204,7 @@ foreach (glob("functions/*.php") as $filename) {
                   "verify_peer_name" => false,
                   "allow_self_signed" => true,
                   "sni_enabled" => true)));
-              $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 5,
+              $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2,
                 STREAM_CLIENT_CONNECT, $stream);
 
               if ( $read_stream === false ) {
@@ -314,7 +314,7 @@ foreach (glob("functions/*.php") as $filename) {
     ?>
       <div class="footer">
         <div class="col-md-6 col-md-offset-1 container">
-          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU AGPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 1.9</p>
+          <p class="text-muted">By <a href="https://raymii.org/s/software/OpenSSL_Decoder.html">Remy van Elst</a>. License: GNU AGPLv3. <a href="https://github.com/RaymiiOrg/ssl-decoder">Source code</a>. <strong><a href="https://cipherli.st/">Strong SSL Ciphers & Config settings @ Cipherli.st</a></strong>. Version: 2.0</p>
         </div>
       </div>
     </div>

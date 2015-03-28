@@ -288,7 +288,6 @@ if ( $read_stream === false ) {
                 'ECDHE-ECDSA-AES256-GCM-SHA384',
                 'ECDHE-RSA-AES256-SHA384',
                 'ECDHE-ECDSA-AES256-SHA384',
-    'TLS_FALLBACK_SCSV',
                 'ECDHE-RSA-AES256-SHA',
                 'ECDHE-ECDSA-AES256-SHA',
                 'SRP-DSS-AES-256-CBC-SHA',
@@ -493,7 +492,31 @@ if ( $read_stream === false ) {
           </td>
         </tr>
         <?php
-        }
+          }
+        ?>
+        <tr>
+          <td>
+            <a href="http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html">TLS_FALLBACK_SCSV</a>
+            </td>
+          <td>
+          <?php
+            $fallback = tls_fallback_scsv($host, $port);
+            // echo "<pre>";
+            // var_dump($fallback);
+            // echo "</pre>";
+            if ($fallback['protocol_count'] == 1) {
+              echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
+            } else {
+              if ($fallback['tls_fallback_scsv_support'] == 1) {
+                echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported.</span>";
+              } else {
+                echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported.</span>";
+              }
+            }
+          ?>
+          </td>
+        </tr>
+        <?php
         $headers = server_http_headers($host, $port);
         ?>
         <tr>

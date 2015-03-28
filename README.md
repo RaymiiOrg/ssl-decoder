@@ -1,8 +1,6 @@
 # SSL Decoder
 
-Simple PHP script which decodes an SSL connection or certificate and displays information.
-
-### Features
+Simple PHP script which decodes an SSL connection and/or certificate and displays information.
 
 * Tries to give all the information you need instead of a rating. 
 * Open source, so you can self host it. 
@@ -37,11 +35,20 @@ Simple PHP script which decodes an SSL connection or certificate and displays in
 - OpenSSL
 - PHP must allow shell_exec and remote fopen.
 
+### Installation
+
+Unpack and go!
+
+    cd /var/www
+    git clone https://github.com/RaymiiOrg/ssl-decoder.git
+
+Browse to https://your-server/ssl-decoder.
+
 ### Demo
 
-See [https://z1s.org/ssl/](https://z1s.org/ssl/).
+See [https://tls.so](https://tls.so).
 
-<a href="https://z1s.org/ssl/"><img src="http://i.imgur.com/R1BQlLVm.png" /></a>
+<a href="https://tls.so"><img src="http://i.imgur.com/R1BQlLVm.png" /></a>
 
 ### License
 

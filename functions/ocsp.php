@@ -16,7 +16,7 @@
 
 function ocsp_stapling($host, $port){
     $result = "";
-    $output = shell_exec('echo | timeout 5 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -tlsextdebug -status 2>&1 | sed -n "/OCSP response:/,/---/p"'); 
+    $output = shell_exec('echo | timeout 2 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -tlsextdebug -status 2>&1 | sed -n "/OCSP response:/,/---/p"'); 
     if (strpos($output, "no response sent") !== false) { 
         $result = array("working" => 0,
             "cert_status" => "No response sent");

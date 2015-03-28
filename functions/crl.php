@@ -35,7 +35,7 @@ function crl_verify($raw_cert_data, $verbose=true) {
             if (0 === strpos($uri, 'http')) {
                 $fp = fopen ("/tmp/" . $random_blurp .  "." . $key . ".crl", 'w+');
                 $ch = curl_init(($uri));
-                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 2);
                 curl_setopt($ch, CURLOPT_FILE, $fp);
                 curl_setopt($ch, CURLOPT_FAILONERROR, true);
                 curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0
+
+- Add TLS_FALLBACK_SCSV check
+- Lower some timeouts from 5 to 2.
+
 ## 1.9
 
 - Add navigation menu
