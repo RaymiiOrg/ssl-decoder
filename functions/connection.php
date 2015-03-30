@@ -36,7 +36,8 @@ function server_http_headers($host, $port){
         "allow_self_signed" => true,
         "sni_enabled" => true),
       'http' => array(
-        'method' => 'GET'
+        'method' => 'GET',
+        'max_redirects' => 1
         )
       )
     );

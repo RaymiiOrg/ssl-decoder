@@ -4,6 +4,7 @@
 
 - Add json API endpoint (see README)
 - Rewrote internals to use same endpoint
+- Don't follow redirects during HTTP header gathering.
 
 ## 2.0
 
