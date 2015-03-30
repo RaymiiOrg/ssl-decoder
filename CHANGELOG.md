@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1
+
+- Add json API endpoint (see README)
+- Rewrote internals to use same endpoint
+
 ## 2.0
 
 - Add TLS_FALLBACK_SCSV check

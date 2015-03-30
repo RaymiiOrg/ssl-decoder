@@ -98,4 +98,83 @@ function crl_verify($raw_cert_data, $verbose=true) {
     }
 }
 
+
+function crl_verify_json($raw_cert_data) {
+  global $random_blurp;
+  $result = [];
+  $cert_data = openssl_x509_parse($raw_cert_data);
+  $cert_serial_nm = strtoupper(bcdechex($cert_data['serialNumber']));   
+  $crl_uris = [];
+  $crl_uri = explode("\nFull Name:\n ", $cert_data['extensions']['crlDistributionPoints']);
+  foreach ($crl_uri as $key => $uri) {
+    if (isset($uri) ) {
+      $uri = explode("URI:", $uri);
+      $uri = $uri[1];    
+      if (isset($uri) ) {
+          $crl_uris[] = preg_replace('/\s+/', '', $uri);
+      }
+    }
+  } 
+  foreach ($crl_uris as $key => $uri) {
+    $crl_no = $key+1; 
+    if (0 === strpos($uri, 'http')) {
+      $result[$crl_no]["crl_uri"] = $uri;
+      $fp = fopen ("/tmp/" . $random_blurp .  "." . $key . ".crl", 'w+');
+      $ch = curl_init(($uri));
+      curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_FILE, $fp);
+      curl_setopt($ch, CURLOPT_FAILONERROR, true);
+      curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+      if(curl_exec($ch) === false) {
+        $result[$crl_no]["error"] = 'Curl error: ' . htmlspecialchars(curl_error($ch));
+        return $result;
+      }
+      curl_close($ch);
+      if(stat("/tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl")['size'] < 10 ) {
+        $result[$crl_no]["error"] = "crl could not be retreived";
+      } 
+      $crl_text = shell_exec("openssl crl -noout -text -inform der -in /tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl 2>&1");
+
+      $crl_last_update = shell_exec("openssl crl -noout -lastupdate -inform der -in /tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl");
+      $crl_last_update = explode("=", $crl_last_update)[1];
+
+      $crl_next_update = shell_exec("openssl crl -noout -nextupdate -inform der -in /tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl");
+      $crl_next_update = explode("=", $crl_next_update)[1];
+
+      unlink("/tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl");
+
+      if ( strpos($crl_text, "unable to load CRL") === 0 ) {
+        $result[$crl_no]["status"] = "invalid";
+      }
+
+      $crl_info = explode("Revoked Certificates:", $crl_text)[0];
+      $crl_certificates = explode("Revoked Certificates:", $crl_text)[1];
+      $crl_certificates = explode("Serial Number:", $crl_certificates); 
+      $revcert = array();
+      foreach ($crl_certificates as $key => $revoked_certificate) {
+        if (!empty($revoked_certificate)) {
+          $revcert[str_replace(" ", "", explode("\n", $revoked_certificate)[0])] = str_replace("        Revocation Date: ", "", explode("\n", $revoked_certificate)[1]);
+        }
+      }
+      if( array_key_exists($cert_serial_nm, $revcert) ) {
+        $result[$crl_no]["status"] = "revoked";
+        $result[$crl_no]["revoked_on"] = $revcert[$cert_serial_nm];
+        $result[$crl_no]["crl_last_update"] = $crl_last_update;
+        $result[$crl_no]["crl_next_update"] = $crl_next_update;
+      } else {
+        $result[$crl_no]["status"] = "ok";
+        $result[$crl_no]["crl_last_update"] = $crl_last_update;
+        $result[$crl_no]["crl_next_update"] = $crl_next_update;
+      }
+    }
+  }
+  return $result;
+}
+
+
+
+
 ?>
