@@ -74,10 +74,18 @@ foreach (glob("functions/*.php") as $filename) {
         <li class="sidebar-brand">
           <h2>Navigation</h2>
         </li>
-        <li><a href="#conndata"><strong>0</strong>: Connection Data</a></li>
+        <?php
+          if (count($data["data"]["connection"]["warning"]) >= 1) {
+            $warntxt = " <sup>(<strong>".htmlspecialchars(count(array_unique($data["data"]["connection"]["warning"])))."</strong>)</sup>";
+          }
+        ?>
+        <li><a href="#conndata"><strong>0</strong>: Connection Data <?php echo $warntxt; ?></a></li>
         <?php
         foreach ($chain_data as $key => $value) {
-          echo "<li><a href='#cert".(string)$key."'><strong>".$key."</strong> : ". htmlspecialchars($value["cert_data"]["subject"]["CN"]) ."</a></li>";
+          if (count($value['warning']) >= 1) {
+            $warntxt = " <sup>(<strong>".htmlspecialchars(count($value['warning']))."</strong>)</sup>";
+          }
+          echo "<li><a href='#cert".(string)$key."'><strong>".$key."</strong> : ". htmlspecialchars($value["cert_data"]["subject"]["CN"]) . $warntxt . "</a></li>";
         }
         ?>
         <li><a href="<?php echo(htmlspecialchars($current_folder)); ?>">Try another website</a></li>
