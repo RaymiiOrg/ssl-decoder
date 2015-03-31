@@ -30,6 +30,7 @@ Simple PHP script which decodes an SSL connection and/or certificate and display
 - Issuer validation
 - Date validation
 - JSON API
+- Warnings for bad connection settings or certificate options
 
 ### Requirements
 

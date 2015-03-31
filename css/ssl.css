@@ -49,6 +49,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   border-right-style: solid;
   border-right-width: 1px;
   border-right-color: #ddd;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #ddd;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: #ddd;
   height: 100%;
   overflow-y: auto;
   z-index: 1000;

@@ -2,13 +2,14 @@
 
 ## 2.1
 
-- Add json API endpoint (see README)
-- Rewrote internals to use same endpoint
+- Add json API endpoint (see README).
+- Rewrote internals to use same endpoint.
+- Add warnings for connection and certificate issues.
 - Don't follow redirects during HTTP header gathering.
 
 ## 2.0
 
-- Add TLS_FALLBACK_SCSV check
+- Add TLS_FALLBACK_SCSV check.
 - Lower some timeouts from 5 to 2.
 
 ## 1.9

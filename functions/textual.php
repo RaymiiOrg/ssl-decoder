@@ -17,7 +17,20 @@
 function pre_dump($var) {
   echo "<pre>";
   var_dump($var);
-  echo "<pre>";
+  echo "</pre>";
+}
+
+function utf8encodeNestedArray($arr) {
+  // json_encode fails with binary data. utf-8 encode that first, some ca's like to encode images in their OID's (verisign, 1.3.6.1.5.5.7.1.12)...
+  $encoded_arr = array();
+  foreach ($arr as $key => $value) {
+    if (is_array($value)) {
+      $encoded_arr[utf8_encode($key)] = utf8encodeNestedArray($value);
+    } else {
+      $encoded_arr[utf8_encode($key)] = utf8_encode($value); 
+    }
+  }
+  return $encoded_arr;
 }
 
 function startsWith($haystack, $needle) {
@@ -30,7 +43,6 @@ function endsWith($haystack, $needle) {
         return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
     }
 }
-
 
 function get_current_folder(){
     $url = $_SERVER['REQUEST_URI']; 

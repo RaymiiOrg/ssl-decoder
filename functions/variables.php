@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+date_default_timezone_set('UTC');
+
 $random_blurp = rand(1000,99999);
 
 # 2014-11-10 (nov) from wikipedia

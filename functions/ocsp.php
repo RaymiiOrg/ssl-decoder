@@ -20,7 +20,6 @@ function ocsp_stapling($host, $port){
   if (strpos($output, "no response sent") !== false) { 
     $result = array("working" => 0,
       "cert_status" => "No response sent");
-    return;
   }
   if (strpos($output, "OCSP Response Data:") !== false) {
     $lines = array();
@@ -45,65 +44,6 @@ function ocsp_stapling($host, $port){
   return $result;
 }
 
-function ocsp_verify($raw_cert_data, $raw_next_cert_data) {
-  global $random_blurp;
-  $cert_data = openssl_x509_parse($raw_cert_data);
-  $tmp_dir = '/tmp/'; 
-  $root_ca = getcwd() . '/cacert.pem';
-
-  $pem_issuer = "";
-  $pem_client = "";
-  $ocsp_uri = explode("OCSP - URI:", $cert_data['extensions']['authorityInfoAccess'])[1];
-  $ocsp_uri = explode("\n", $ocsp_uri)[0];
-  $ocsp_uri = explode(" ", $ocsp_uri)[0];
-  if (empty($ocsp_uri) ) {
-    $result = array('unknown' => "Could not find OCSP URI", );
-    return $result;
-  }
-  openssl_x509_export($raw_cert_data, $pem_client);
-  openssl_x509_export($raw_next_cert_data, $pem_issuer);
-  openssl_x509_export_to_file($raw_next_cert_data, $tmp_dir.$random_blurp.'.cert_issuer.pem');
-  openssl_x509_export_to_file($raw_cert_data, $tmp_dir.$random_blurp.'.cert_client.pem'); 
-
-  // Some OCSP's want HTTP/1.1 but OpenSSL does not do that. Add Host header as workaround.
-  $ocsp_host = parse_url($ocsp_uri, PHP_URL_HOST);
-
-  //echo '<pre>' . htmlspecialchars('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1') . '</pre>';
-
-  $output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
-  $filter_output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem"');
-
-
-
-  $lines = array();
-  $output = preg_replace("/[[:blank:]]+/"," ", $output);
-  $ocsp_status_lines = explode("\n", $output);
-  $ocsp_status_lines = array_map('trim', $ocsp_status_lines);
-  foreach($ocsp_status_lines as $line) {
-    if(endsWith($line, ":") == false) {
-      list($k, $v) = explode(":", $line, 2);
-      $lines[trim($k)] = trim($v);
-    }
-  }  
-
-  $result = array("This Update" => $lines["This Update"],
-    "Next Update" => $lines["Next Update"],
-    "Reason" => $lines["Reason"],
-    "Revocation Time" => $lines["Revocation Time"],
-    "ocsp_verify_status" => $lines[$tmp_dir . $random_blurp . ".cert_client.pem"]);
-  if ($result["ocsp_verify_status"] == "good") { 
-    $result["good"] = $filter_output;
-  } else if ($result["ocsp_verify_status"] == "revoked") {
-    $result["revoked"] = $filter_output;
-  } else {
-    $result["unknown"] = $filter_output;
-  }
-  unlink($tmp_dir.$random_blurp.'.cert_client.pem');
-  unlink($tmp_dir.$random_blurp.'.cert_issuer.pem');
-  return $result;
-}
-
-
 function ocsp_verify_json($raw_cert_data, $raw_next_cert_data, $ocsp_uri) {
   global $random_blurp;
   $result = array();
@@ -112,16 +52,19 @@ function ocsp_verify_json($raw_cert_data, $raw_next_cert_data, $ocsp_uri) {
   $pem_issuer = "";
   $pem_client = "";
   openssl_x509_export($raw_cert_data, $pem_client);
+  openssl_x509_export_to_file($raw_cert_data, $tmp_dir.$random_blurp.'.cert_client.pem'); 
   openssl_x509_export($raw_next_cert_data, $pem_issuer);
   openssl_x509_export_to_file($raw_next_cert_data, $tmp_dir.$random_blurp.'.cert_issuer.pem');
-  openssl_x509_export_to_file($raw_cert_data, $tmp_dir.$random_blurp.'.cert_client.pem'); 
+  $isser_loc = $tmp_dir.$random_blurp.'.cert_issuer.pem';
 
   // Some OCSP's want HTTP/1.1 but OpenSSL does not do that. Add Host header as workaround.
   $ocsp_host = parse_url($ocsp_uri, PHP_URL_HOST);
 
-  $output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
+  //pre_dump('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc.' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
+
+  $output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
   
-  $filter_output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$tmp_dir.$random_blurp.'.cert_issuer.pem -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem"');
+  $filter_output = shell_exec('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem"');
 
   $output = preg_replace("/[[:blank:]]+/"," ", $output);
   $ocsp_status_lines = explode("\n", $output);

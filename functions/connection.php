@@ -49,588 +49,364 @@ function server_http_headers($host, $port){
 }
 
 function ssl_conn_ciphersuites($host, $port, $ciphersuites){
-        $old_error_reporting = error_reporting();
-        error_reporting($old_error_reporting ^ E_WARNING); 
-        $results = array();
-        foreach ($ciphersuites as $value) {
-          $results[$value] = false;
-          $stream = stream_context_create (array("ssl" => 
-          array("verify_peer" => false,
-            "verify_peer_name" => false,
-            "allow_self_signed" => true,
-            'ciphers' => $value,
-            "sni_enabled" => true)));
-          $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
-          if ( $read_stream === false ) {
-            $results[$value] = false;
-          } else {
-            $results[$value] = true;
-          }
-        }
-        error_reporting($old_error_reporting);
-        return $results;
-      }
+  $old_error_reporting = error_reporting();
+  error_reporting($old_error_reporting ^ E_WARNING); 
+  $results = array();
+  foreach ($ciphersuites as $value) {
+    $results[$value] = false;
+    $stream = stream_context_create (array("ssl" => 
+    array("verify_peer" => false,
+      "verify_peer_name" => false,
+      "allow_self_signed" => true,
+      'ciphers' => $value,
+      "sni_enabled" => true)));
+    $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
+    if ( $read_stream === false ) {
+      $results[$value] = false;
+    } else {
+      $results[$value] = true;
+    }
+  }
+  error_reporting($old_error_reporting);
+  return $results;
+}
 
-      function ssl_conn_protocols($host, $port){
-        $old_error_reporting = error_reporting();
-        error_reporting($old_error_reporting ^ E_WARNING); 
-        $results = array('sslv3' => false, 
-                         'tlsv1.0' => false,
-                         'tlsv1.1' => false,
-                         'tlsv1.2' => false);
+function ssl_conn_protocols($host, $port){
+  $old_error_reporting = error_reporting();
+  error_reporting($old_error_reporting ^ E_WARNING); 
+  $results = array('sslv3' => false, 
+                   'tlsv1.0' => false,
+                   'tlsv1.1' => false,
+                   'tlsv1.2' => false);
 
-        $stream_sslv3 = stream_context_create (array("ssl" => 
-          array("verify_peer" => false,
-            "capture_session_meta" => true,
-            "verify_peer_name" => false,
-            "allow_self_signed" => true,
-            'crypto_method' => STREAM_CRYPTO_METHOD_SSLv3_CLIENT,
-            "sni_enabled" => true)));
-        $read_stream_sslv3 = stream_socket_client("sslv3://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_sslv3);
-        if ( $read_stream_sslv3 === false ) {
-          $results['sslv3'] = false;
-        } else {
-          $results['sslv3'] = true;
-        }
-
-        $stream_tlsv10 = stream_context_create (array("ssl" => 
-          array("verify_peer" => false,
-            "capture_session_meta" => true,
-            "verify_peer_name" => false,
-            "allow_self_signed" => true,
-            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_0_CLIENT,
-            "sni_enabled" => true)));
-        $read_stream_tlsv10 = stream_socket_client("tlsv1.0://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv10);
-        if ( $read_stream_tlsv10 === false ) {
-          $results['tlsv1.0'] = false;
-        } else {
-          $results['tlsv1.0'] = true;
-        }
-
-        $stream_tlsv11 = stream_context_create (array("ssl" => 
-          array("verify_peer" => false,
-            "capture_session_meta" => true,
-            "verify_peer_name" => false,
-            "allow_self_signed" => true,
-            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_1_CLIENT,
-            "sni_enabled" => true)));
-        $read_stream_tlsv11 = stream_socket_client("tlsv1.1://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv11);
-        if ( $read_stream_tlsv11 === false ) {
-          $results['tlsv1.1'] = false;
-        } else {
-          $results['tlsv1.1'] = true;
-        }
-
-        $stream_tlsv12 = stream_context_create (array("ssl" => 
-          array("verify_peer" => false,
-            "capture_session_meta" => true,
-            "verify_peer_name" => false,
-            "allow_self_signed" => true,
-            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_2_CLIENT,
-            "sni_enabled" => true)));
-        $read_stream_tlsv12 = stream_socket_client("tlsv1.2://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv12);
-        if ( $read_stream_tlsv12 === false ) {
-          $results['tlsv1.2'] = false;
-        } else {
-          $results['tlsv1.2'] = true;
-        }
-        error_reporting($old_error_reporting);
-        return $results;
-      }
-
-
-function ssl_conn_metadata($host, $port, $chain=null) {
-  global $random_blurp;
-  global $current_folder;
-  $stream = stream_context_create (array("ssl" => 
+  $stream_sslv3 = stream_context_create (array("ssl" => 
     array("verify_peer" => false,
       "capture_session_meta" => true,
       "verify_peer_name" => false,
       "allow_self_signed" => true,
+      'crypto_method' => STREAM_CRYPTO_METHOD_SSLv3_CLIENT,
       "sni_enabled" => true)));
-  $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
-  if ( $read_stream === false ) {
-    return false;
+  $read_stream_sslv3 = stream_socket_client("sslv3://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_sslv3);
+  if ( $read_stream_sslv3 === false ) {
+    $results['sslv3'] = false;
   } else {
-    $context = stream_context_get_params($read_stream);
-    $context_meta = stream_context_get_options($read_stream)['ssl']['session_meta'];
-    $cert_data = openssl_x509_parse($context["options"]["ssl"]["peer_certificate"])[0];
-
-    if ($context_meta) { 
-      ?>
-      <section id="conndata">
-      <h3>Connection Data</h3>
-      <table class="table table-striped table-bordered">
-        <tbody>
-          <tr>
-            <td colspan="2"><strong>Connection Data</strong></td>
-          </tr>
-          <?php
-            if ( $chain ) {
-          ?>
-            <tr>
-               <td>Chain sent by Server (in server order)</td>
-              <td style="font-family: monospace;">
-              <?php
-              $chain_length = count($chain);
-              $certificate_chain = array();
-              if ($chain_length <= 10) {
-                for ($i = 0; $i < $chain_length; $i++) {
-                  if (openssl_x509_parse($chain[$i])['issuer']['CN'] && openssl_x509_parse($chain[$i])['subject']['CN']) {
-                    echo "Name...........: <i>";
-                    echo htmlspecialchars(openssl_x509_parse($chain[$i])['subject']['CN']);
-                    echo " </i><br>Issued by......:<i> ";
-                    echo htmlspecialchars(openssl_x509_parse($chain[$i])['issuer']['CN']);
-                    echo "</i><br>";
-
-                    $export_pem = "";
-                    openssl_x509_export($chain[$i], $export_pem);
-                    array_push($certificate_chain, $export_pem);
-
-                    if (openssl_x509_parse($chain[$i])['issuer']['CN'] == openssl_x509_parse($chain[$i + 1])['subject']['CN']){
-                      continue;
-                    } else {
-                      if ($i != $chain_length - 1) {
-                        echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Issuer does not match the next certificate CN. Chain order is probaby wrong.</span><br><br>";
-                      }
-                    }
-                  }
-                }
-                echo "<br>";
-              } else {
-                echo "<span class='text-danger'>Error: Certificate chain to large.</span><br>";
-              }
-
-              file_put_contents('/tmp/verify_cert.' . $random_blurp . '.pem', implode("\n", array_reverse($certificate_chain)).PHP_EOL , FILE_APPEND);
-
-              $verify_output = 0;
-              $verify_exit_code = 0;
-              $verify_exec = exec(escapeshellcmd('openssl verify -verbose -purpose any -CAfile ' . getcwd() . '/cacert.pem /tmp/verify_cert.' . $random_blurp . '.pem') . "| grep -v OK", $verify_output, $verify_exit_code);
-
-              if ($verify_exit_code != 1) {
-                echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Validating certificate chain failed:</span><br>";
-                echo "<pre>";
-                echo str_replace('/tmp/verify_cert.' . $random_blurp . '.pem: ', '', implode("\n", $verify_output));
-                echo "</pre>";
-              } else {
-                echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Sucessfully validated certificate chain.</span><br>";
-              }
-
-              unlink('/tmp/verify_cert.' . $random_blurp . '.pem');
-
-                 ?>
-              </td>
-            </tr>
-
-          <?php
-            }
-            if ( fixed_gethostbyname($host) ) {
-          ?>
-          <tr>
-            <td>IP / Hostname / Port</td>
-            <td>
-              <?php 
-                echo htmlspecialchars(fixed_gethostbyname($host));
-                echo " - ";
-                echo htmlspecialchars(gethostbyaddr(fixed_gethostbyname($host)));
-                echo " - ";
-                echo htmlspecialchars($port);
-              ?>
-            </td>
-          </tr>
-          <?php
-            }
-          ?>
-          <tr>
-            <td>Protocol</td>
-            <td>
-              <?php
-              $protocols = ssl_conn_protocols($host, $port);
-              foreach (array_reverse($protocols) as $key => $value) {
-                if ( $value == true ) {
-                  if ( $key == "tlsv1.2") {
-                    echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">TLSv1.2 (Supported)</span></p>';
-                  } else if ( $key == "tlsv1.1") {
-                    echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
-                  } else if ( $key == "tlsv1.0") {
-                    echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
-                  } else if ( $key == "sslv3") {
-                    echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported)</span></p>';
-                  } else {
-                    echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
-                  }
-                } else {
-                  if ( $key == "tlsv1.2") {
-                    echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span></p>';
-                  } else if ( $key == "tlsv1.1") {
-                    echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.1  (Not supported)</p>';
-                  } else if ( $key == "tlsv1.0") {
-                    echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.0  (Not supported)</p>';
-                  } else if ( $key == "sslv3") {
-                    echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv3 (Not supported)</span></p>';
-                  } else {
-                    echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
-                  }
-                }
-              }
-              ?>
-
-            </td>
-          </tr>
-          <?php
-            if ($_GET['ciphersuites'] == 1) {
-          ?>
-          <tr>
-            <td>Ciphersuites supported by server</td>
-            <td>
-              <?php
-                $ciphersuites_to_test = array('ECDHE-RSA-AES256-GCM-SHA384',
-                  'ECDHE-ECDSA-AES256-GCM-SHA384',
-                  'ECDHE-RSA-AES256-SHA384',
-                  'ECDHE-ECDSA-AES256-SHA384',
-                  'ECDHE-RSA-AES256-SHA',
-                  'ECDHE-ECDSA-AES256-SHA',
-                  'SRP-DSS-AES-256-CBC-SHA',
-                  'SRP-RSA-AES-256-CBC-SHA',
-                  'SRP-AES-256-CBC-SHA',
-                  'DH-DSS-AES256-GCM-SHA384',
-                  'DHE-DSS-AES256-GCM-SHA384',
-                  'DH-RSA-AES256-GCM-SHA384',
-                  'DHE-RSA-AES256-GCM-SHA384',
-                  'DHE-RSA-AES256-SHA256',
-                  'DHE-DSS-AES256-SHA256',
-                  'DH-RSA-AES256-SHA256',
-                  'DH-DSS-AES256-SHA256',
-                  'DHE-RSA-AES256-SHA',
-                  'DHE-DSS-AES256-SHA',
-                  'DH-RSA-AES256-SHA',
-                  'DH-DSS-AES256-SHA',
-                  'DHE-RSA-CAMELLIA256-SHA',
-                  'DHE-DSS-CAMELLIA256-SHA',
-                  'DH-RSA-CAMELLIA256-SHA',
-                  'DH-DSS-CAMELLIA256-SHA',
-                  'ECDH-RSA-AES256-GCM-SHA384',
-                  'ECDH-ECDSA-AES256-GCM-SHA384',
-                  'ECDH-RSA-AES256-SHA384',
-                  'ECDH-ECDSA-AES256-SHA384',
-                  'ECDH-RSA-AES256-SHA',
-                  'ECDH-ECDSA-AES256-SHA',
-                  'AES256-GCM-SHA384',
-                  'AES256-SHA256',
-                  'AES256-SHA',
-                  'CAMELLIA256-SHA',
-                  'PSK-AES256-CBC-SHA',
-                  'ECDHE-RSA-AES128-GCM-SHA256',
-                  'ECDHE-ECDSA-AES128-GCM-SHA256',
-                  'ECDHE-RSA-AES128-SHA256',
-                  'ECDHE-ECDSA-AES128-SHA256',
-                  'ECDHE-RSA-AES128-SHA',
-                  'ECDHE-ECDSA-AES128-SHA',
-                  'SRP-DSS-AES-128-CBC-SHA',
-                  'SRP-RSA-AES-128-CBC-SHA',
-                  'SRP-AES-128-CBC-SHA',
-                  'DH-DSS-AES128-GCM-SHA256',
-                  'DHE-DSS-AES128-GCM-SHA256',
-                  'DH-RSA-AES128-GCM-SHA256',
-                  'DHE-RSA-AES128-GCM-SHA256',
-                  'DHE-RSA-AES128-SHA256',
-                  'DHE-DSS-AES128-SHA256',
-                  'DH-RSA-AES128-SHA256',
-                  'DH-DSS-AES128-SHA256',
-                  'DHE-RSA-AES128-SHA',
-                  'DHE-DSS-AES128-SHA',
-                  'DH-RSA-AES128-SHA',
-                  'DH-DSS-AES128-SHA',
-                  'DHE-RSA-SEED-SHA',
-                  'DHE-DSS-SEED-SHA',
-                  'DH-RSA-SEED-SHA',
-                  'DH-DSS-SEED-SHA',
-                  'DHE-RSA-CAMELLIA128-SHA',
-                  'DHE-DSS-CAMELLIA128-SHA',
-                  'DH-RSA-CAMELLIA128-SHA',
-                  'DH-DSS-CAMELLIA128-SHA',
-                  'ECDH-RSA-AES128-GCM-SHA256',
-                  'ECDH-ECDSA-AES128-GCM-SHA256',
-                  'ECDH-RSA-AES128-SHA256',
-                  'ECDH-ECDSA-AES128-SHA256',
-                  'ECDH-RSA-AES128-SHA',
-                  'ECDH-ECDSA-AES128-SHA',
-                  'AES128-GCM-SHA256',
-                  'AES128-SHA256',
-                  'AES128-SHA',
-                  'SEED-SHA',
-                  'CAMELLIA128-SHA',
-                  'IDEA-CBC-SHA',
-                  'PSK-AES128-CBC-SHA',
-                  'ECDHE-RSA-RC4-SHA',
-                  'ECDHE-ECDSA-RC4-SHA',
-                  'ECDH-RSA-RC4-SHA',
-                  'ECDH-ECDSA-RC4-SHA',
-                  'RC4-SHA',
-                  'RC4-MD5',
-                  'PSK-RC4-SHA',
-                  'ECDHE-RSA-DES-CBC3-SHA',
-                  'ECDHE-ECDSA-DES-CBC3-SHA',
-                  'SRP-DSS-3DES-EDE-CBC-SHA',
-                  'SRP-RSA-3DES-EDE-CBC-SHA',
-                  'SRP-3DES-EDE-CBC-SHA',
-                  'EDH-RSA-DES-CBC3-SHA',
-                  'EDH-DSS-DES-CBC3-SHA',
-                  'DH-RSA-DES-CBC3-SHA',
-                  'DH-DSS-DES-CBC3-SHA',
-                  'ECDH-RSA-DES-CBC3-SHA',
-                  'ECDH-ECDSA-DES-CBC3-SHA',
-                  'DES-CBC3-SHA',
-                  'PSK-3DES-EDE-CBC-SHA',
-                  'EDH-RSA-DES-CBC-SHA',
-                  'EDH-DSS-DES-CBC-SHA',
-                  'DH-RSA-DES-CBC-SHA',
-                  'DH-DSS-DES-CBC-SHA',
-                  'DES-CBC-SHA',
-                  'EXP-EDH-RSA-DES-CBC-SHA',
-                  'EXP-EDH-DSS-DES-CBC-SHA',
-                  'EXP-DH-RSA-DES-CBC-SHA',
-                  'EXP-DH-DSS-DES-CBC-SHA',
-                  'EXP-DES-CBC-SHA',
-                  'EXP-RC2-CBC-MD5',
-                  'EXP-RC4-MD5',
-                  'ECDHE-RSA-NULL-SHA',
-                  'ECDHE-ECDSA-NULL-SHA',
-                  'AECDH-NULL-SHA',
-                  'ECDH-RSA-NULL-SHA',
-                  'ECDH-ECDSA-NULL-SHA',
-                  'NULL-SHA256',
-                  'NULL-SHA',
-                  'NULL-MD5');
-
-                $bad_ciphersuites = array('ECDHE-RSA-DES-CBC3-SHA',
-                  'ECDHE-ECDSA-DES-CBC3-SHA',
-                  'EDH-RSA-DES-CBC3-SHA',
-                  'EDH-DSS-DES-CBC3-SHA',
-                  'DH-RSA-DES-CBC3-SHA',
-                  'DH-DSS-DES-CBC3-SHA',
-                  'ECDH-RSA-DES-CBC3-SHA',
-                  'ECDH-ECDSA-DES-CBC3-SHA',
-                  'DES-CBC3-SHA',
-                  'EDH-RSA-DES-CBC-SHA',
-                  'EDH-DSS-DES-CBC-SHA',
-                  'DH-RSA-DES-CBC-SHA',
-                  'DH-DSS-DES-CBC-SHA',
-                  'DES-CBC-SHA',
-                  'EXP-EDH-RSA-DES-CBC-SHA',
-                  'EXP-EDH-DSS-DES-CBC-SHA',
-                  'EXP-DH-RSA-DES-CBC-SHA',
-                  'EXP-DH-DSS-DES-CBC-SHA',
-                  'EXP-DES-CBC-SHA',
-                  'EXP-EDH-RSA-DES-CBC-SHA',
-                  'EXP-EDH-DSS-DES-CBC-SHA',
-                  'EXP-DH-RSA-DES-CBC-SHA',
-                  'EXP-DH-DSS-DES-CBC-SHA',
-                  'EXP-DES-CBC-SHA',
-                  'EXP-RC2-CBC-MD5',
-                  'EXP-RC4-MD5',
-                  'RC4-MD5',
-                  'EXP-RC2-CBC-MD5',
-                  'EXP-RC4-MD5',
-                  'ECDHE-RSA-RC4-SHA',
-                  'ECDHE-ECDSA-RC4-SHA',
-                  'ECDH-RSA-RC4-SHA',
-                  'ECDH-ECDSA-RC4-SHA',
-                  'RC4-SHA',
-                  'RC4-MD5',
-                  'PSK-RC4-SHA',
-                  'EXP-RC4-MD5',
-                  'ECDHE-RSA-NULL-SHA',
-                  'ECDHE-ECDSA-NULL-SHA',
-                  'AECDH-NULL-SHA',
-                  'RC4-SHA',
-                  'RC4-MD5',
-                  'ECDH-RSA-NULL-SHA',
-                  'ECDH-ECDSA-NULL-SHA',
-                  'NULL-SHA256',
-                  'NULL-SHA',
-                  'NULL-MD5');
-                $supported_ciphersuites = ssl_conn_ciphersuites($host, $port, $ciphersuites_to_test);
-    
-                foreach ($supported_ciphersuites as $key => $value) {
-                  if($value == true){
-                    if (in_array($key, $bad_ciphersuites)) {
-                      $bad_ciphersuite = 1;
-                      echo "";
-                      echo "<span class='text-danger glyphicon glyphicon-remove'></span> ";
-                    } else {
-                      echo "<span class='glyphicon glyphicon-minus'></span> ";
-                    }
-                    echo htmlspecialchars($key);
-                    echo "<br>";
-                  } else {
-                    echo "<!-- ";
-                    echo "<span class='glyphicon glyphicon-remove'></span> - ";
-                    echo htmlspecialchars($key);
-                    echo " <br -->";
-                  }
-                }
-              if ($bad_ciphersuite) {
-                  ?>
-                  <p><br>Ciphersuites containing <a href="https://en.wikipedia.org/wiki/Null_cipher">NULL</a>, <a href="https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States">EXP(ort)</a>, <a href="https://en.wikipedia.org/wiki/Weak_key">DES and RC4</a> are marked RED because they are suboptimal.</p>
-                  <?php               
-                }
-                 
-              ?>
-            </td>
-          </tr>
-          <?php
-            } else {
-          ?>
-          <tr>
-            <td>Ciphersuite</td>
-            <td>
-              <?php            
-              echo htmlspecialchars($context_meta['cipher_name']);
-              echo " (".htmlspecialchars($context_meta['cipher_bits'])." bits)";
-              ?>
-            </td>
-          </tr>
-          <?php
-            }
-          ?>
-          <tr>
-            <td>
-              <a href="http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html">TLS_FALLBACK_SCSV</a>
-              </td>
-            <td>
-            <?php
-              $fallback = tls_fallback_scsv($host, $port);
-              // echo "<pre>";
-              // var_dump($fallback);
-              // echo "</pre>";
-              if ($fallback['protocol_count'] == 1) {
-                echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
-              } else {
-                if ($fallback['tls_fallback_scsv_support'] == 1) {
-                  echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported.</span>";
-                } else {
-                  echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported.</span>";
-                }
-              }
-            ?>
-            </td>
-          </tr>
-          <?php
-          $headers = server_http_headers($host, $port);
-          ?>
-          <tr>
-            <td><a href="https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html">Strict Transport Security</a></td>
-            <td>
-              <?php 
-              if ( $headers["strict-transport-security"] ) {
-                echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
-                if ( is_array($headers["strict-transport-security"])) {
-                  echo htmlspecialchars(substr($headers["strict-transport-security"][0], 0, 50));
-                  echo "<br > <i>HSTS header was found multiple times. Only showing the first one.</i>";
-                } else {
-                  echo htmlspecialchars(substr($headers["strict-transport-security"], 0, 50));
-                }
-                echo "</span>";
-              } else {
-                echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
-              }
-              ?>
-            </td>
-          </tr>
-          <tr>
-            <td><a href="https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html">HTTP Public Key Pinning Extension (HPKP)</a></td>
-            <td>
-              <?php 
-              if ( $headers["public-key-pins"] ) {
-                echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
-                if ( is_array($headers["public-key-pins"])) {
-                  echo htmlspecialchars(substr($headers["public-key-pins"][0], 0, 255));
-                  echo "<br > <i>HPKP header was found multiple times. Only showing the first one.</i>";
-                echo "</span>";
-                } else {
-                  echo htmlspecialchars(substr($headers["public-key-pins"], 0, 255));
-                }
-              } else {
-                echo '<span>Not Set</span>';
-              }
-              ?>
-              <?php 
-              if ( $headers["public-key-pins-report-only"] ) {
-                echo "<b>Report Only</b>: ";
-                if ( is_array($headers["public-key-pins-report-only"])) {
-                  echo htmlspecialchars(substr($headers["public-key-pins-report-only"][0], 0, 255));
-                  echo "<br > <i>HPKP Report Only header was found multiple times. Only showing the first one.</i>";
-                } else {
-                  echo htmlspecialchars(substr($headers["public-key-pins-report-only"], 0, 255));
-                }
-              } 
-              ?>
-            </td>
-          </tr>
-          <tr>
-            <td>OCSP Stapling</td>
-            <td>
-            <?php 
-              $stapling = ocsp_stapling($host,$port);
-              if($stapling["working"] == 1) {
-                echo "<table class='table'>";
-                foreach ($stapling as $key => $value) {
-                  if ($key != "working") {
-                    echo "<tr><td>" . $key . "</td><td>" . $value . "</td></tr>";
-                  }
-                } 
-                echo "</table>";
-              } else {
-                echo "No response received.";
-              }
-            ?>
-            </td>
-          </tr>
-          <tr>
-            <td>This Server' OpenSSL Version</td>
-            <td>
-            <?php
-            echo htmlspecialchars(shell_exec("openssl version"));
-            ?>
-            </td>
-          </tr>
-          <tr>
-            <td>This Server' Date (RFC 2822)</td>
-            <td>
-            <?php
-            echo htmlspecialchars(shell_exec("date --rfc-2822"));
-            ?>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </section>
-      <?php
-    } else {
-      return false;
-    }
+    $results['sslv3'] = true;
   }
+
+  $stream_tlsv10 = stream_context_create (array("ssl" => 
+    array("verify_peer" => false,
+      "capture_session_meta" => true,
+      "verify_peer_name" => false,
+      "allow_self_signed" => true,
+      'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_0_CLIENT,
+      "sni_enabled" => true)));
+  $read_stream_tlsv10 = stream_socket_client("tlsv1.0://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv10);
+  if ( $read_stream_tlsv10 === false ) {
+    $results['tlsv1.0'] = false;
+  } else {
+    $results['tlsv1.0'] = true;
+  }
+
+  $stream_tlsv11 = stream_context_create (array("ssl" => 
+    array("verify_peer" => false,
+      "capture_session_meta" => true,
+      "verify_peer_name" => false,
+      "allow_self_signed" => true,
+      'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_1_CLIENT,
+      "sni_enabled" => true)));
+  $read_stream_tlsv11 = stream_socket_client("tlsv1.1://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv11);
+  if ( $read_stream_tlsv11 === false ) {
+    $results['tlsv1.1'] = false;
+  } else {
+    $results['tlsv1.1'] = true;
+  }
+
+  $stream_tlsv12 = stream_context_create (array("ssl" => 
+    array("verify_peer" => false,
+      "capture_session_meta" => true,
+      "verify_peer_name" => false,
+      "allow_self_signed" => true,
+      'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_2_CLIENT,
+      "sni_enabled" => true)));
+  $read_stream_tlsv12 = stream_socket_client("tlsv1.2://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv12);
+  if ( $read_stream_tlsv12 === false ) {
+    $results['tlsv1.2'] = false;
+  } else {
+    $results['tlsv1.2'] = true;
+  }
+  error_reporting($old_error_reporting);
+  return $results;
 }
 
+function ssl_conn_metadata($data) {
+  global $random_blurp;
+  global $current_folder;
+  $chain_length = count($data["chain"]);
+  echo "<section id='conndata'>";
+  if (is_array($data["warning"]) && count($data["warning"]) >= 1) {
+    $data["warning"] = array_unique($data["warning"]);
+    if (count($data["warning"]) == 1) {
+      echo "<h3>" . count($data["warning"]) . " warning!</h3>";
+    } else {
+      echo "<h3>" . count($data["warning"]) . " warnings!</h3>";
+    }
+    foreach ($data["warning"] as $key => $value) {
+      echo "<div class='alert alert-danger' role='alert'>";
+      echo htmlspecialchars($value);
+      echo "</div>";
+    }
+  }
+  echo "<table class='table table-striped table-bordered'>";
+  echo "<tbody>";
+  echo "<tr>";
+  echo "<td colspan='2'><strong>Connection Data</strong></td>";
+  echo "</tr>";
+  echo "<tr>";
+  // chain
+  echo "<td>Chain sent by Server <br>(in server order)</td>";
+  echo "<td style='font-family: monospace;'>";
+  foreach ($data["chain"] as $key => $value) {
+    if (!empty($value['name'])) {
+      echo "Name...........: <i>";
+      echo htmlspecialchars(htmlspecialchars($value['name']));
+      echo " </i><br>Issued by......:<i> ";
+      echo htmlspecialchars(htmlspecialchars($value['issuer']));
+      echo "</i><br>";
+    }
+    if (isset($value["error"])) {
+      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Issuer does not match the next certificate CN. Chain order is probaby wrong.</span><br><br>";
+    }
+  }
+  echo "<br>";
+  if ($data["validation"]["status"] == "failed") {
+    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Validating certificate chain failed:</span><br>";
+    echo "<pre>";
+    echo htmlspecialchars($data["validation"]["error"]);
+    echo "</pre>";
+  } else {
+    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Sucessfully validated certificate chain.</span><br>";
+  }
+  echo "</td>";
+  echo "</tr>";
+  // ip hostname port
+  if ( $data["hostname"] ) {
+    echo "<tr>";
+    echo "<td>IP / Hostname / Port</td>";
+    echo "<td>";
+    echo htmlspecialchars($data["ip"]);
+    echo " - ";
+    echo htmlspecialchars($data["hostname"]);
+    echo " - ";
+    echo htmlspecialchars($data["port"]);
+    echo "</td>";
+    echo "</tr>";
+  }
+  // protocols
+  echo "<tr>";
+  echo "<td>Protocols</td>";
+  echo "<td>";
+  $protocols = $data["protocols"];
+  foreach ($protocols as $key => $value) {
+    if ( $value == true ) {
+      if ( $key == "tlsv1.2") {
+        echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">TLSv1.2 (Supported)</span></p>';
+      } else if ( $key == "tlsv1.1") {
+        echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
+      } else if ( $key == "tlsv1.0") {
+        echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
+      } else if ( $key == "sslv3") {
+        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported)</span></p>';
+      } else {
+        echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
+      }
+    } else {
+      if ( $key == "tlsv1.2") {
+        echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span></p>';
+      } else if ( $key == "tlsv1.1") {
+        echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.1  (Not supported)</p>';
+      } else if ( $key == "tlsv1.0") {
+        echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.0  (Not supported)</p>';
+      } else if ( $key == "sslv3") {
+        echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv3 (Not supported)</span></p>';
+      } else {
+        echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
+      }
+    }
+  }
+  echo "</td>";
+  echo "</tr>";
+  //ciphersuites
+  if ($_GET['ciphersuites'] == 1) {
+    echo "<tr>";
+    echo "<td>Ciphersuites supported by server</td>";
+    echo "<td>";
+    $bad_ciphersuites = array('ECDHE-RSA-DES-CBC3-SHA',
+      'ECDHE-ECDSA-DES-CBC3-SHA',
+      'EDH-RSA-DES-CBC3-SHA',
+      'EDH-DSS-DES-CBC3-SHA',
+      'DH-RSA-DES-CBC3-SHA',
+      'DH-DSS-DES-CBC3-SHA',
+      'ECDH-RSA-DES-CBC3-SHA',
+      'ECDH-ECDSA-DES-CBC3-SHA',
+      'DES-CBC3-SHA',
+      'EDH-RSA-DES-CBC-SHA',
+      'EDH-DSS-DES-CBC-SHA',
+      'DH-RSA-DES-CBC-SHA',
+      'DH-DSS-DES-CBC-SHA',
+      'DES-CBC-SHA',
+      'EXP-EDH-RSA-DES-CBC-SHA',
+      'EXP-EDH-DSS-DES-CBC-SHA',
+      'EXP-DH-RSA-DES-CBC-SHA',
+      'EXP-DH-DSS-DES-CBC-SHA',
+      'EXP-DES-CBC-SHA',
+      'EXP-EDH-RSA-DES-CBC-SHA',
+      'EXP-EDH-DSS-DES-CBC-SHA',
+      'EXP-DH-RSA-DES-CBC-SHA',
+      'EXP-DH-DSS-DES-CBC-SHA',
+      'EXP-DES-CBC-SHA',
+      'EXP-RC2-CBC-MD5',
+      'EXP-RC4-MD5',
+      'RC4-MD5',
+      'EXP-RC2-CBC-MD5',
+      'EXP-RC4-MD5',
+      'ECDHE-RSA-RC4-SHA',
+      'ECDHE-ECDSA-RC4-SHA',
+      'ECDH-RSA-RC4-SHA',
+      'ECDH-ECDSA-RC4-SHA',
+      'RC4-SHA',
+      'RC4-MD5',
+      'PSK-RC4-SHA',
+      'EXP-RC4-MD5',
+      'ECDHE-RSA-NULL-SHA',
+      'ECDHE-ECDSA-NULL-SHA',
+      'AECDH-NULL-SHA',
+      'RC4-SHA',
+      'RC4-MD5',
+      'ECDH-RSA-NULL-SHA',
+      'ECDH-ECDSA-NULL-SHA',
+      'NULL-SHA256',
+      'NULL-SHA',
+      'NULL-MD5');
+    foreach ($data["supported_ciphersuites"] as $key => $value) {
+      if (in_array($value, $bad_ciphersuites)) {
+        $bad_ciphersuite = 1;
+        echo "<span class='text-danger glyphicon glyphicon-remove'></span>";
+        echo "<span class='text-danger'> ";
+        echo htmlspecialchars($value);
+        echo "</span>";
+      } else {
+        echo "<span class='glyphicon glyphicon-minus'></span> ";
+        echo htmlspecialchars($value);
+      }
+      echo "<br>";
+    }
+    if ($bad_ciphersuite) {
+      echo "<p><br>Ciphersuites containing <a href='https://en.wikipedia.org/wiki/Null_cipher'>NULL</a>,";
+      echo " <a href='https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States'>EXP(ort)</a>,";
+      echo " <a href='https://en.wikipedia.org/wiki/Weak_key'>DES";
+      echo " and RC4</a> are marked RED because they are suboptimal.</p>";
+    }
+    echo "</td>";
+    echo "</tr>";
+  } else {
+    echo "<tr>";
+    echo "<td>Ciphersuite Used</td>";
+    echo "<td>";
+    echo htmlspecialchars($data['used_ciphersuite']['name']);
+    echo " (".htmlspecialchars($data['used_ciphersuite']['bits'])." bits)";
+    echo "</td>";
+    echo "</tr>";
+  }
+  //tls fallback scsv
+  echo "<tr>";
+  echo "<td>";
+  echo "<a href='http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html'>TLS_FALLBACK_SCSV</a>";
+  echo "</td>";
+  echo "<td>";
 
+  if ($data["tls_fallback_scsv"] == "supported") {
+    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported.</span>";
+  } elseif ($data["tls_fallback_scsv"] == "unsupported") {
+    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported.</span>";
+  } else {
+    echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
+  }
+  echo "</td>";
+  echo "</tr>";
 
+  // headers
+  echo "<tr>";
+  echo "<td>";
+  echo "<a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html'>Strict Transport Security</a>";
+  echo "</td>";
+  echo "<td>";
+  // hsts
+  if ( $data["strict_transport_security"] == "not set" ) {
+    echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
+  } else {
+    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
+    echo htmlspecialchars($data["strict_transport_security"]);
+    echo "</span>";
+  }
+  echo "</td>";
+  echo "</tr>";
+  echo "<tr>";
+  echo "<td>";
+  echo "<a href='https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html'>HTTP Public Key Pinning Extension (HPKP)</a>";
+  echo "</td>";
+  echo "<td>";
+  //hpkp
+  if ( $data["public_key_pins"] == "not set" ) {
+    echo '<span>Not Set</span>';
+  } else {
+    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
+    echo htmlspecialchars($data["public_key_pins"]);
+  }
+  if ( $data["public_key-pins_report_only"] ) {
+    echo "<b>Report Only</b>: ";
+    echo htmlspecialchars($data["public_key_pins_report_only"]);
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  echo "</td>";
+  echo "</tr>";
+  // ocsp stapling
+  echo "<tr>";
+  echo "<td>OCSP Stapling</td>";
+  echo "<td>";
+  if (isset($data["ocsp_stapling"]["working"])) {
+    if($data["ocsp_stapling"]["working"] == 1) {
+      echo "<table class='table'>";
+      foreach ($data["ocsp_stapling"] as $key => $value) {
+        if ($key != "working") {
+          echo "<tr><td>" . htmlspecialchars($key) . "</td><td>" . htmlspecialchars($value) . "</td></tr>";
+        }
+      } 
+      echo "</table>";
+    } else {
+      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>No OCSP stapling response received.</span>";
+    }
+  } else {
+    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>No OCSP stapling response received.</span>";
+  }
+  echo "</td>";
+  // openssl version
+  echo "</tr>";
+  echo "<tr>";
+  echo "<td>This Server's OpenSSL Version</td>";
+  echo "<td>";
+  echo htmlspecialchars(shell_exec("openssl version"));
+  echo "</td>";
+  echo "</tr>";
+  echo "<tr>";
+  //date
+  echo "<td>This Server's Date <br>(RFC 2822)</td>";
+  echo "<td>";
+  echo htmlspecialchars(shell_exec("date --rfc-2822"));
+  echo "</td>";
+  echo "</tr>";
+  echo "</tbody>";
+  echo "</table>";
+}
 
 
 
@@ -641,10 +417,10 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
   $context = stream_context_get_params($read_stream);
   $context_meta = stream_context_get_options($read_stream)['ssl']['session_meta'];
   $cert_data = openssl_x509_parse($context["options"]["ssl"]["peer_certificate"])[0];
+  $result["checked_hostname"] = $host;
   //chain
   if (isset($context_meta)) { 
     if (isset($chain_data)) {
-
       $chain_length = count($chain_data);
       $certificate_chain = array();
       if ($chain_length <= 10) {
@@ -660,6 +436,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
             } else {
               if ($i != $chain_length - 1) {
                 $result["chain"][$i]["error"] = "Issuer does not match the next certificate CN. Chain order is probaby wrong.";
+                $result["warning"][] = "Issuer does not match the next certificate CN. Chain order is probaby wrong.";
               }
             }
           }
@@ -672,10 +449,11 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       $verify_exec = exec(escapeshellcmd('openssl verify -verbose -purpose any -CAfile ' . getcwd() . '/cacert.pem /tmp/verify_cert.' . $random_blurp . '.pem') . "| grep -v OK", $verify_output, $verify_exit_code);
 
       if ($verify_exit_code != 1) {
-        $result["chain"]["validation"]["status"] = "failed";
-        $result["chain"]["validation"]["error"] = "Error: Validating certificate chain failed: " . str_replace('/tmp/verify_cert.' . $random_blurp . '.pem: ', '', implode("\n", $verify_output));
+        $result["validation"]["status"] = "failed";
+        $result["validation"]["error"] = "Error: Validating certificate chain failed: " . str_replace('/tmp/verify_cert.' . $random_blurp . '.pem: ', '', implode("\n", $verify_output));
+        $result["warning"][] = "Error: Validating certificate chain failed. Probably non-trusted root/self signed certificate, or the chain order is wrong.";
       } else {
-        $result["chain"]["validation"]["status"] = "success";
+        $result["validation"]["status"] = "success";
       }
       unlink('/tmp/verify_cert.' . $random_blurp . '.pem');
     }
@@ -688,6 +466,17 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
 
     // protocols
     $result["protocols"] = array_reverse(ssl_conn_protocols($host, $port));
+    foreach ($result["protocols"] as $key => $value) {
+      if ( $value == true ) {
+        if ( $key == "sslv3") {
+          $result["warning"][] = 'SSLv3 supported. Please disable and upgrade to a newer protocol like TLSv1.2.';
+        }
+      } else {
+        if ( $key == "tlsv1.2") {
+          $result["warning"][] = 'TLSv1.2 unsupported. Please enable TLSv1.2.';
+        }
+      }
+    }
 
     // ciphersuites
     if ($_GET['ciphersuites'] == 1) {   
@@ -809,55 +598,6 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
         'NULL-SHA256',
         'NULL-SHA',
         'NULL-MD5');
-
-      $bad_ciphersuites = array('ECDHE-RSA-DES-CBC3-SHA',
-        'ECDHE-ECDSA-DES-CBC3-SHA',
-        'EDH-RSA-DES-CBC3-SHA',
-        'EDH-DSS-DES-CBC3-SHA',
-        'DH-RSA-DES-CBC3-SHA',
-        'DH-DSS-DES-CBC3-SHA',
-        'ECDH-RSA-DES-CBC3-SHA',
-        'ECDH-ECDSA-DES-CBC3-SHA',
-        'DES-CBC3-SHA',
-        'EDH-RSA-DES-CBC-SHA',
-        'EDH-DSS-DES-CBC-SHA',
-        'DH-RSA-DES-CBC-SHA',
-        'DH-DSS-DES-CBC-SHA',
-        'DES-CBC-SHA',
-        'EXP-EDH-RSA-DES-CBC-SHA',
-        'EXP-EDH-DSS-DES-CBC-SHA',
-        'EXP-DH-RSA-DES-CBC-SHA',
-        'EXP-DH-DSS-DES-CBC-SHA',
-        'EXP-DES-CBC-SHA',
-        'EXP-EDH-RSA-DES-CBC-SHA',
-        'EXP-EDH-DSS-DES-CBC-SHA',
-        'EXP-DH-RSA-DES-CBC-SHA',
-        'EXP-DH-DSS-DES-CBC-SHA',
-        'EXP-DES-CBC-SHA',
-        'EXP-RC2-CBC-MD5',
-        'EXP-RC4-MD5',
-        'RC4-MD5',
-        'EXP-RC2-CBC-MD5',
-        'EXP-RC4-MD5',
-        'ECDHE-RSA-RC4-SHA',
-        'ECDHE-ECDSA-RC4-SHA',
-        'ECDH-RSA-RC4-SHA',
-        'ECDH-ECDSA-RC4-SHA',
-        'RC4-SHA',
-        'RC4-MD5',
-        'PSK-RC4-SHA',
-        'EXP-RC4-MD5',
-        'ECDHE-RSA-NULL-SHA',
-        'ECDHE-ECDSA-NULL-SHA',
-        'AECDH-NULL-SHA',
-        'RC4-SHA',
-        'RC4-MD5',
-        'ECDH-RSA-NULL-SHA',
-        'ECDH-ECDSA-NULL-SHA',
-        'NULL-SHA256',
-        'NULL-SHA',
-        'NULL-MD5');
-
       $tested_ciphersuites = ssl_conn_ciphersuites($host, $port, $ciphersuites_to_test);
       $result["supported_ciphersuites"] = array();
       foreach ($tested_ciphersuites as $key => $value) {
@@ -879,6 +619,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
         $result["tls_fallback_scsv"] = "supported";
       } else {
         $result["tls_fallback_scsv"] = "unsupported";
+        $result["warning"][] = "TLS_FALLBACK_SCSV unsupported. Please upgrade OpenSSL to enable. This offers downgrade attack protection.";
       }
     }
     //hsts
@@ -891,6 +632,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       }
     } else {
       $result["strict_transport_security"] = 'not set';
+      $result["warning"][] = "HTTP Strict Transport Security not set.";
     }
     //hpkp
     if ( $headers["public-key-pins"] ) {
@@ -915,6 +657,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       $result["ocsp_stapling"] = $stapling;
     } else {
       $result["ocsp_stapling"] = "not set";
+      $result["warning"][] = "OCSP Stapling not enabled.";
     }
     
     $result["openssl_version"] = shell_exec("openssl version");
