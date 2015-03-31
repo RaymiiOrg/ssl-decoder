@@ -103,7 +103,7 @@ foreach (glob("functions/*.php") as $filename) {
     }
   }
       
-  if ( !isset($_GET['host']) || !isset($_GET['csr']) ) {
+  if (empty($_GET['host']) && empty($_GET['csr'])) {
     require_once("inc/form.php");
   } else {
     echo "<div id='page-content-wrapper'>";
@@ -126,7 +126,7 @@ foreach (glob("functions/*.php") as $filename) {
       $random_bla = md5(uniqid(rand(), true));
     }
   
-    if ( empty($_GET['csr']) && !empty($host) ) {
+    if ( !empty($host) ) {
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong></p>";
       if ( !empty($data["error"]) ) {
         echo "<span class='text-danger'>" . htmlspecialchars($data["error"][0]) . "</span>";
@@ -159,7 +159,7 @@ foreach (glob("functions/*.php") as $filename) {
           echo "</section></div>";
         }
       }     
-    } elseif (!empty($_GET['csr']) && empty($host) ) {
+    } elseif (!empty($_GET['csr']) ) {
       $data = csr_parse_json($_GET['csr']);
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p>";
       $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".html";
