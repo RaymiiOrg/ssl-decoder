@@ -36,14 +36,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 }
 
 #wrapper {
-  padding-left: 250px;
+  padding-left: 300px;
   transition: all 0.4s ease 0s;
 }
 
 #sidebar-wrapper {
-  margin-left: -250px;
-  left: 250px;
-  width: 250px;
+  margin-left: -300px;
+  left: 300px;
+  width: 300px;
   background: #f9f9f9;
   position: fixed;
   border-right-style: solid;
@@ -68,7 +68,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .sidebar-nav {
   position: absolute;
   top: 0;
-  width: 250px;
+  width: 300px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -116,12 +116,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     #wrapper.active {
       position: relative;
-      left: 250px;
+      left: 300px;
     }
 
     #wrapper.active #sidebar-wrapper {
-      left: 250px;
-      width: 250px;
+      left: 300px;
+      width: 300px;
       transition: all 0.4s ease 0s;
     }
 
