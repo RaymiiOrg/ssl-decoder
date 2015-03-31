@@ -130,7 +130,6 @@ function crl_verify_json($raw_cert_data) {
       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
       if(curl_exec($ch) === false) {
         $result[$crl_no]["error"] = 'Curl error: ' . htmlspecialchars(curl_error($ch));
-        return $result;
       }
       curl_close($ch);
       if(stat("/tmp/" . $random_blurp .  "." . escapeshellcmd($key) . ".crl")['size'] < 10 ) {
