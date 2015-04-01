@@ -58,6 +58,10 @@ See [https://tls.so](https://tls.so).
 GNU Affero GPL v3: [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
 
 
+### Tracking
+
+The SSL Decoder includes Piwik Javascript tracking code. If you self host it, you might want to remove that. It is in `inc/footer.php`.
+
 ### JSON API
 
 Endpoint: `/json.php`. 
