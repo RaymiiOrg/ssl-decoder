@@ -137,6 +137,7 @@ foreach (glob("functions/*.php") as $filename) {
         $hostfilename = preg_replace("([\.]{2,})", '', $host);
         $hostfilename = preg_replace("([^a-z0-9])", '', $host);
         $cache_filename = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".html";
+        $cache_filename_json = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".json";
 
         if ($write_cache == 1) {
           echo "This result is saved at most 60 days on <a href=\"";
@@ -154,7 +155,6 @@ foreach (glob("functions/*.php") as $filename) {
         foreach ($data["data"]["chain"] as $key => $value) {
           echo "<div class='content'><section id='cert" . $key . "'>";
           echo "<header><h2>Certificate for '". htmlspecialchars($value["cert_data"]["subject"]["CN"]) ."'</h2></header>";
-          //pre_dump($value);
           cert_parse($value);
           echo "</section></div>";
         }
@@ -163,6 +163,7 @@ foreach (glob("functions/*.php") as $filename) {
       $data = csr_parse_json($_GET['csr']);
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p>";
       $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".html";
+      $cache_filename_json = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".json";
       if ($write_cache == 1) {
         echo "This result is saved at most 60 days on <a href=\"";
         echo(htmlspecialchars($current_folder) . $cache_filename); 
@@ -196,6 +197,12 @@ require_once("inc/footer.php");
 if ($write_cache == 1) {
   if (!file_exists($cache_filename)) {
     file_put_contents($cache_filename, ob_get_contents());
+  }
+  if (is_array($data)) {
+    $json_data = json_encode(utf8encodeNestedArray($data));
+  }
+  if (!file_exists($cache_filename_json)) {
+    file_put_contents($cache_filename_json, $json_data);
   }
 }
 
