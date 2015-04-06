@@ -62,7 +62,7 @@ if ($_GET["type"] == "pretty") {
   </script>
   <noscript><p><img src="//hosted-oswa.org/piwik/piwik.php?idsite=34" style="border:0;" alt="" /></p></noscript>
   <!-- End Piwik Code -->
-  <?
+  <?php
 } else {
   header('Content-Type: application/json');
   echo json_encode($data);
