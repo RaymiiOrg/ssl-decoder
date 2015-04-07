@@ -174,7 +174,7 @@ function ssl_conn_metadata($data) {
       echo "</i><br>";
     }
     if (isset($value["error"])) {
-      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Issuer does not match the next certificate CN. Chain order is probaby wrong.</span><br><br>";
+      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Error: Issuer does not match the next certificate CN. Chain order is probably wrong.</span><br><br>";
     }
   }
   echo "<br>";
@@ -435,8 +435,8 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
               continue;
             } else {
               if ($i != $chain_length - 1) {
-                $result["chain"][$i]["error"] = "Issuer does not match the next certificate CN. Chain order is probaby wrong.";
-                $result["warning"][] = "Issuer does not match the next certificate CN. Chain order is probaby wrong.";
+                $result["chain"][$i]["error"] = "Issuer does not match the next certificate CN. Chain order is probably wrong.";
+                $result["warning"][] = "Issuer does not match the next certificate CN. Chain order is probably wrong.";
               }
             }
           }
