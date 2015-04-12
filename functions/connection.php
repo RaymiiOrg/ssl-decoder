@@ -71,13 +71,29 @@ function ssl_conn_ciphersuites($host, $port, $ciphersuites){
   return $results;
 }
 
+
+function test_sslv2($host, $port) {
+  $exitstatus = 0;
+  $output = 0;
+  exec('echo | timeout 2 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -ssl2 2>&1 >/dev/null', $output, $exitstatus); 
+  if ($exitstatus == 0) { 
+    $result = true;
+  } else {
+    $result = false;
+  }
+  return $result;
+}
+
 function ssl_conn_protocols($host, $port){
   $old_error_reporting = error_reporting();
   error_reporting($old_error_reporting ^ E_WARNING); 
-  $results = array('sslv3' => false, 
+  $results = array('sslv2' => false, 
+                   'sslv3' => false, 
                    'tlsv1.0' => false,
                    'tlsv1.1' => false,
                    'tlsv1.2' => false);
+
+  $results['sslv2'] = test_sslv2($host, $port);
 
   $stream_sslv3 = stream_context_create (array("ssl" => 
     array("verify_peer" => false,
@@ -216,6 +232,8 @@ function ssl_conn_metadata($data) {
         echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
       } else if ( $key == "sslv3") {
         echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported)</span></p>';
+      } else if ( $key == "sslv2") {
+        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv2 (Supported)</span></p>';
       } else {
         echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
       }
@@ -228,6 +246,8 @@ function ssl_conn_metadata($data) {
         echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.0  (Not supported)</p>';
       } else if ( $key == "sslv3") {
         echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv3 (Not supported)</span></p>';
+      } else if ( $key == "sslv2") {
+        echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv2 (Not supported)</span></p>';
       } else {
         echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
       }
@@ -451,7 +471,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       if ($verify_exit_code != 1) {
         $result["validation"]["status"] = "failed";
         $result["validation"]["error"] = "Error: Validating certificate chain failed: " . str_replace('/tmp/verify_cert.' . $random_blurp . '.pem: ', '', implode("\n", $verify_output));
-        $result["warning"][] = "Error: Validating certificate chain failed. Probably non-trusted root/self signed certificate, or the chain order is wrong.";
+        $result["warning"][] = "Validating certificate chain failed. Probably non-trusted root/self signed certificate, or the chain order is wrong.";
       } else {
         $result["validation"]["status"] = "success";
       }
@@ -468,6 +488,9 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
     $result["protocols"] = array_reverse(ssl_conn_protocols($host, $port));
     foreach ($result["protocols"] as $key => $value) {
       if ( $value == true ) {
+        if ( $key == "sslv2") {
+          $result["warning"][] = 'SSLv2 supported. Please disable ASAP and upgrade to a newer protocol like TLSv1.2.';
+        }
         if ( $key == "sslv3") {
           $result["warning"][] = 'SSLv3 supported. Please disable and upgrade to a newer protocol like TLSv1.2.';
         }

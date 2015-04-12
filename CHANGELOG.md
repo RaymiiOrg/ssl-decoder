@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2
+
+- Add SSLv2 test
+
 ## 2.1
 
 - Add json API endpoint (see README).

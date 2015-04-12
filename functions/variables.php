@@ -16,6 +16,8 @@
 
 date_default_timezone_set('UTC');
 
+$version = 2.2;
+
 $random_blurp = rand(1000,99999);
 
 # 2014-11-10 (nov) from wikipedia

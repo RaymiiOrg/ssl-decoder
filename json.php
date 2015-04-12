@@ -34,6 +34,7 @@ if ( isset($_GET['host']) && !empty($_GET['host'])) {
   $data["error"] = ["Host is required"];
 }
 
+$data['version'] = $version;
 $data = utf8encodeNestedArray($data);
 
 if(isset($data["data"]["error"])) {
