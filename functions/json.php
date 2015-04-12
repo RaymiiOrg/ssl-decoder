@@ -45,9 +45,9 @@ function check_json($host,$port) {
         $chain_key = (string)$key+1;
         if ($key == 0) {
           $data["connection"] = ssl_conn_metadata_json($host, $port, $read_stream, $chain_data);
-          //$data["chain"][$chain_key] = cert_parse_json($curr, $next, $host, true);
+          $data["chain"][$chain_key] = cert_parse_json($curr, $next, $host, true);
         } else {
-          //$data["chain"][$chain_key] = cert_parse_json($curr, $next, null, false);
+          $data["chain"][$chain_key] = cert_parse_json($curr, $next, null, false);
         }
       }
     } else {
