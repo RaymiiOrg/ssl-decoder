@@ -28,6 +28,22 @@ function get(&$var, $default=null) {
 }
 
 function server_http_headers($host, $port){
+  // first check if server is http. otherwise long timeout.
+  $ch = curl_init(("https://" . $host . ":" . $port));
+  curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+  curl_setopt($ch, CURLOPT_NOBODY, true);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_FAILONERROR, true);
+  curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+  if(curl_exec($ch) === false) {
+      curl_close($ch);
+      return false;
+  }
+  curl_close($ch);
+
   stream_context_set_default(
     array("ssl" => 
       array("verify_peer" => false,
@@ -37,7 +53,8 @@ function server_http_headers($host, $port){
         "sni_enabled" => true),
       'http' => array(
         'method' => 'GET',
-        'max_redirects' => 1
+        'max_redirects' => 1,
+        'timeout' => 2
         )
       )
     );

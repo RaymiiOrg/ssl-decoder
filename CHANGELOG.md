@@ -3,6 +3,7 @@
 ## 2.2
 
 - Add SSLv2 test
+- Fix long duration and possible timeout on non-http(s) tests
 
 ## 2.1
 

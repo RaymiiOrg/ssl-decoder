@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 date_default_timezone_set('UTC');
+ini_set('default_socket_timeout', 2);
 
 $version = 2.2;
 
