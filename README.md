@@ -45,6 +45,7 @@ Unpack and go!
 
     cd /var/www
     git clone https://github.com/RaymiiOrg/ssl-decoder.git
+    chown $wwwuser ssl-decoder/results/
 
 Browse to https://your-server/ssl-decoder.
 
