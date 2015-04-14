@@ -37,6 +37,7 @@ Simple PHP script which decodes an SSL connection and/or certificate and display
 - PHP 5.6+
 - OpenSSL
 - PHP must allow shell_exec and remote fopen.
+- Debian: `php-intl` package installed.
 
 ### Installation
 
@@ -44,6 +45,7 @@ Unpack and go!
 
     cd /var/www
     git clone https://github.com/RaymiiOrg/ssl-decoder.git
+    chown $wwwuser ssl-decoder/results/
 
 Browse to https://your-server/ssl-decoder.
 
