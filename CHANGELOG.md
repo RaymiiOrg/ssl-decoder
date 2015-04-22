@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3
+
+- Add warning if certificate expires in < 30 days.
+
 ## 2.2
 
 - Add SSLv2 test

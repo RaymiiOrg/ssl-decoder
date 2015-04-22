@@ -724,6 +724,17 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
       $result['warning'][] = "Certificate expired! Expiration date: " . date(DATE_RFC2822,$cert_data['validTo_time_t']);
     }
   }
+  // almost expired
+  if (!empty($cert_data['validTo_time_t'])) {
+    $certExpiryDate = strtotime(date(DATE_RFC2822,$cert_data['validTo_time_t']));
+    $certExpiryDiff = $certExpiryDate - strtotime($today);
+    if ($certExpiryDiff < 2592000) {
+      $result['cert_expires_in_less_than_thirty_days'] = true;
+      $result['warning'][] = "Certificate expires in " . round($certExpiryDiff / 84600) . " days!. Expiration date: " . date(DATE_RFC2822,$certExpiryDate);
+    } else {
+      $result['cert_expires_in_less_than_thirty_days'] = false;
+    }
+  }
 
   if ( array_search(explode("Policy: ", explode("\n", $cert_data['extensions']['certificatePolicies'])[0])[1], $ev_oids) ) {
     $result["validation_type"] = "extended";
