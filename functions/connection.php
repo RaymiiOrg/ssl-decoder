@@ -100,7 +100,6 @@ function test_heartbleed($host, $port) {
   # check if python2 is available
   exec("command -v python2 >/dev/null 2>&1", $cmdoutput, $cmdexitstatus);
   if ($cmdexitstatus != 1) {
-    pre_dump("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($host) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent");
     exec("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($host) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent", $output, $exitstatus);
     if (file_exists($tmpfile)) {
       $json_data = json_decode(file_get_contents($tmpfile),true);
