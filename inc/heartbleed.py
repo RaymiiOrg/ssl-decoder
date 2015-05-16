@@ -195,10 +195,10 @@ def store_results(host_name, current_status):
             changelog_entry = [current_time, current_status]
             host['changelog'].append(changelog_entry)
         host['status'] = current_status
-        with open(opts.log_file, 'a') as f:
-            message = "{current_time} {host} {current_status}".format(**locals())
-            f.write(message + "\n")
-            return message
+        #with open(opts.log_file, 'a') as f:
+            #message = "{current_time} {host} {current_status}".format(**locals())
+            #f.write(message + "\n")
+        return message
 
 
 def scan_host(host):
