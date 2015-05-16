@@ -17,7 +17,7 @@
 date_default_timezone_set('UTC');
 ini_set('default_socket_timeout', 2);
 
-$version = 2.3;
+$version = 2.4;
 
 $random_blurp = rand(1000,99999);
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4
+
+- Add SSL Compressio check
+- Add Heartbleed test (requires python2)
+- Add some tooltips for topics
+
 ## 2.3
 
 - Add warning if certificate expires in < 30 days.

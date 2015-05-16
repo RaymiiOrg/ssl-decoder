@@ -88,6 +88,36 @@ function ssl_conn_ciphersuites($host, $port, $ciphersuites){
   return $results;
 }
 
+function test_heartbleed($host, $port) {
+  global $current_folder;
+  $exitstatus = 0;
+  $output = 0;
+  $cmdexitstatus = 0;
+  $cmdoutput = 0;
+  $result = 0;
+  $uuid = gen_uuid();
+  $tmpfile = "/tmp/" . $uuid . ".txt";
+  # check if python2 is available
+  exec("command -v python2 >/dev/null 2>&1", $cmdoutput, $cmdexitstatus);
+  if ($cmdexitstatus != 1) {
+    pre_dump("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($host) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent");
+    exec("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($host) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent", $output, $exitstatus);
+    if (file_exists($tmpfile)) {
+      $json_data = json_decode(file_get_contents($tmpfile),true);
+      foreach ($json_data as $key => $value) {
+        if ($value['status'] == true) {
+          $result = "vulnerable";
+        } else {
+          $result = "not_vulnerable";
+        }
+      }
+      unlink($tmpfile);
+    }
+  } else {
+    $result = "python2error";
+  }
+  return $result;
+}
 
 function test_sslv2($host, $port) {
   $exitstatus = 0;
@@ -401,6 +431,24 @@ function ssl_conn_metadata($data) {
   echo "</td>";
   echo "</tr>";
 
+  //heartbleed
+  if ($data['heartbleed'] != 'python2error') {
+    echo "<tr>";
+    echo "<td>";
+    echo "Heartbleed";
+    echo "</td>";
+    echo "<td>";
+
+    if ($data["heartbleed"] == "not_vulnerable") {
+      echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Not vulnerable. </span>";
+    } elseif ($data["heartbleed"] == "vulnerable") {
+      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Vulnerable. </span>";
+    } 
+    echo "<a href='http://heartbleed.com/' data-toggle='tooltip' data-placement='top' title='Heartbleed is a serious vulnerability exposing server memory and thus private data to an attacker. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
+    echo "</td>";
+    echo "</tr>";
+  }
+
   // headers
   echo "<tr>";
   echo "<td>";
@@ -530,6 +578,12 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       $result["ip"] = fixed_gethostbyname($host);
       $result["hostname"] = gethostbyaddr(fixed_gethostbyname($host));
       $result["port"] = $port;
+    }
+
+    //heartbleed
+    $result['heartbleed'] = test_heartbleed($host, $port);
+    if ($result['heartbleed'] == "vulnerable") {
+      $result["warning"][] = 'Vulnerable to the Heartbleed bug. Please update your OpenSSL ASAP!';
     }
 
     // compression
