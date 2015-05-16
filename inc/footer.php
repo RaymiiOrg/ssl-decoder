@@ -32,6 +32,14 @@ if(empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUE
 <script>
     
     $(document).ready(function(){
+        //tooltips
+        $('[data-toggle="tooltip"]').tooltip();   
+        $(".tip-top").tooltip({placement : 'top'});
+        $(".tip-right").tooltip({placement : 'right'});
+        $(".tip-bottom").tooltip({placement : 'bottom'});
+        $(".tip-left").tooltip({ placement : 'left'});
+        
+        //menu
         var aChildren = $("nav li").children(); // find the a children of the list items
         var aArray = []; // create the empty aArray
         for (var i=0; i < aChildren.length; i++) {    

@@ -101,6 +101,20 @@ function test_sslv2($host, $port) {
   return $result;
 }
 
+## python2 inc/heartbleed.py 85.222.224.236 --json tmp --max 1 --threads 1 --port 443
+
+function conn_compression($host, $port) {
+  $exitstatus = 0;
+  $output = 0;
+  exec('echo | timeout 2 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"', $output, $exitstatus); 
+  if ($exitstatus == 0) { 
+    $result = false;
+  } else {
+    $result = true;
+  }
+  return $result;
+}
+
 function ssl_conn_protocols($host, $port){
   $old_error_reporting = error_reporting();
   error_reporting($old_error_reporting ^ E_WARNING); 
@@ -248,15 +262,18 @@ function ssl_conn_metadata($data) {
       } else if ( $key == "tlsv1.0") {
         echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
       } else if ( $key == "sslv3") {
-        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported)</span></p>';
+        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported) </span>';
+        echo "<a href='https://blog.mozilla.org/security/2014/10/14/the-poodle-attack-and-the-end-of-ssl-3-0/' data-toggle='tooltip' data-placement='top' title='SSLv3 is old and broken. It makes you vulerable for the POODLE attack. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
       } else if ( $key == "sslv2") {
-        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv2 (Supported)</span></p>';
+        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv2 (Supported) </span>';
+        echo "<a href='http://www.rapid7.com/db/vulnerabilities/sslv2-and-up-enabled' data-toggle='tooltip' data-placement='top' title='SSLv2 is old and broken. It was replaced by SSLv3 in 1996. It does not support intermediate certs and has flaws in the crypto. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
       } else {
         echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
       }
     } else {
       if ( $key == "tlsv1.2") {
-        echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span></p>';
+        echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span> ';
+        echo "<a href='http://www.yassl.com/yaSSL/Blog/Entries/2010/10/7_Differences_between_SSL_and_TLS_Protocol_Versions.html' data-toggle='tooltip' data-placement='top' title='TLSv1.2 was released in 2008. It is the most recent and secure version of the protocol. It adds TLS extensions and the AES ciphersuites plus other features and fixes. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
       } else if ( $key == "tlsv1.1") {
         echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.1  (Not supported)</p>';
       } else if ( $key == "tlsv1.0") {
@@ -269,6 +286,18 @@ function ssl_conn_metadata($data) {
         echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
       }
     }
+  }
+  echo "</td>";
+  echo "</tr>";
+  echo "<tr>";
+  echo "<td>SSL Compression</td>";
+  echo "<td>";
+  if ($data['compression'] == false) {
+    echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">SSL Compression disabled</span></p>';
+  } else {
+    echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">SSL Compression enabled</span> ';
+
+    echo "<a href='https://isecpartners.com/blog/2012/september/details-on-the-crime-attack.aspx' data-toggle='tooltip' data-placement='top' title='SSL Compression makes you vulnerable to the CRIME attack. Click the question mark for more info about it.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
   }
   echo "</td>";
   echo "</tr>";
@@ -357,17 +386,18 @@ function ssl_conn_metadata($data) {
   //tls fallback scsv
   echo "<tr>";
   echo "<td>";
-  echo "<a href='http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html'>TLS_FALLBACK_SCSV</a>";
+  echo "TLS_FALLBACK_SCSV";
   echo "</td>";
   echo "<td>";
 
   if ($data["tls_fallback_scsv"] == "supported") {
-    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported.</span>";
+    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported. </span>";
   } elseif ($data["tls_fallback_scsv"] == "unsupported") {
-    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported.</span>";
+    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported. </span>";
   } else {
-    echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
+    echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required. ";
   }
+  echo "<a href='http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html' data-toggle='tooltip' data-placement='top' title='TLS_FALLBACK_SCSV provides protocol downgrade protection. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
   echo "</td>";
   echo "</tr>";
 
@@ -385,6 +415,7 @@ function ssl_conn_metadata($data) {
     echo htmlspecialchars($data["strict_transport_security"]);
     echo "</span>";
   }
+  echo " <a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html' data-toggle='tooltip' data-placement='top' title='Strict Transport Security lets visitors know that your website should only be visitid via HTTPS. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
   echo "</td>";
   echo "</tr>";
   echo "<tr>";
@@ -499,6 +530,15 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       $result["ip"] = fixed_gethostbyname($host);
       $result["hostname"] = gethostbyaddr(fixed_gethostbyname($host));
       $result["port"] = $port;
+    }
+
+    // compression
+    $compression = conn_compression($host, $port);
+    if ($compression == false) { 
+      $result["compression"] = false;
+    } else {
+      $result["compression"] = true;
+      $result["warning"][] = 'SSL compression enabled. Please disable to prevent attacks like CRIME.';
     }
 
     // protocols

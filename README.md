@@ -12,7 +12,7 @@ Simple PHP script which decodes an SSL connection and/or certificate and display
 * JSON API
 * Fast.
 
-### Features
+## Features
 
 - Connection information
 - Decodes CSR
@@ -32,14 +32,14 @@ Simple PHP script which decodes an SSL connection and/or certificate and display
 - JSON API
 - Warnings for bad connection settings or certificate options
 
-### Requirements
+## Requirements
 
 - PHP 5.6+
 - OpenSSL
 - PHP must allow shell_exec and remote fopen.
 - Debian: `php-intl` package installed.
 
-### Installation
+## Installation
 
 Unpack and go!
 
@@ -49,7 +49,20 @@ Unpack and go!
 
 Browse to https://your-server/ssl-decoder.
 
-### Demo
+### OpenSSL compilation
+
+If you want to use the latest OpenSSL and your distro doesn't shit with it you can compile your own OpenSSL and replace the system one. Do note that this might break stuff.
+
+    cd /usr/local/src
+    wget https://openssl.org/source/openssl-1.0.2.tar.gz
+    tar -xf openssl-1.0.2.tar.gz
+    cd openssl-1.0.2
+    ./config --prefix=/usr --openssldir=/usr/local/openssl shared zlib
+    make
+    make test
+    make install
+
+## Demo
 
 See [https://tls.so](https://tls.so).
 
