@@ -32,6 +32,7 @@ Simple PHP script which decodes an SSL connection and/or certificate and display
 - JSON API
 - Warnings for bad connection settings or certificate options
 - Heartbleed test
+- SNI specific testing
 
 ## Requirements
 
@@ -49,6 +50,8 @@ Unpack and go!
     chown $wwwuser ssl-decoder/results/
 
 Browse to https://your-server/ssl-decoder.
+
+The default timeout for checks is 2 seconds. If this is to fast for your internal services, this can be raised in the `variables.php` file.
 
 ### OpenSSL compilation
 
@@ -83,11 +86,10 @@ The SSL Decoder includes Piwik Javascript tracking code. If you self host it, yo
 Endpoint: `/json.php`. 
 
 
-
 Accepts: 
 - CSR 
 - Certificate 
-- Host (+port, default 443)
+- Host:ip (+port, default 443)
 
 Returns JSON UTF-8 encoded certificate (and connection) data. 
 
@@ -276,7 +278,7 @@ Example Response:
 
 Params:
 
-    - `host` = Hostname or IP address
+    - `host:ip` = Hostname:IP address
     - `port` = port to test (443, 993, 465, 8443 etc). 
     - ciphersuites = 1 to enumerate ciphersuites supported by the tested server. Takes longer. If not specified or not 1, ciphersuites will not be tested, used ciphersuite will be reported.
 

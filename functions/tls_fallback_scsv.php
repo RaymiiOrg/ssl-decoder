@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function tls_fallback_scsv($host,$port) {
-
+function tls_fallback_scsv($host, $ip, $port) {
+    global $timeout;
     $result = [];
-    $protocols = ssl_conn_protocols($host, $port);
+    $protocols = ssl_conn_protocols($host, $ip, $port);
     if (count(array_filter($protocols)) > 1) {
         $result['protocol_count'] = count(array_filter($protocols));
-        $fallback_test = shell_exec("echo | timeout 2 openssl s_client -connect " . escapeshellcmd($host) . ":" . escapeshellcmd($port) . " -fallback_scsv -no_tls1_2 2>&1 >/dev/null");
-        // echo "<pre>";
-        // var_dump($fallback_test);
-        // echo "</pre>";
+        $fallback_test = shell_exec("echo | timeout $timeout openssl s_client -servername \"" . escapeshellcmd($host) . "\" -connect " . escapeshellcmd($ip) . ":" . escapeshellcmd($port) . " -fallback_scsv -no_tls1_2 2>&1 >/dev/null");
         if ( stripos($fallback_test, "alert inappropriate fallback") !== false ) {
             $result['tls_fallback_scsv_support'] = 1;
         }

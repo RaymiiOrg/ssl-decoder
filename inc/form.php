@@ -23,7 +23,6 @@
                 <div class="col-md-4 col-md-offset-1">
                   <div class="checkbox">
                     <label for="ciphersuites">
-                      <!-- <input type="checkbox" name="ciphersuites" id="ciphersuites" value="1" checked="checked"> -->
                       <input type="checkbox" name="ciphersuites" id="ciphersuites" value="1" checked="checked">
                       Enumerate Ciphersuites (takes longer)
                     </label>

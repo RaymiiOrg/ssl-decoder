@@ -10,13 +10,13 @@ foreach (glob("functions/*.php") as $filename) {
 if ( isset($_GET['host']) && !empty($_GET['host'])) {
   $data = [];
   $hostname = mb_strtolower(get($_GET['host']));
-  $host = parse_hostname($hostname);
-  if ($host['port']) {
-    $port = $host['port'];
-  } else {
-    $port = get($_GET['port'], '443');
-  }
-  $host = $host['hostname'];
+  $hostname = parse_hostname($hostname);
+  if ($hostname['multiple_ip']) {
+    $data["error"] = ["Host format is incorrect. (use \$host:\$ip.)"];
+  } 
+  $host = $hostname['hostname'];
+  $ip = $hostname['ip'];
+  $port = get($_GET['port'], '443');
   if ( !is_numeric($port) ) {
     $port = 443;
   }
@@ -25,7 +25,7 @@ if ( isset($_GET['host']) && !empty($_GET['host'])) {
   $hostfilename = preg_replace("([\.]{2,})", '', $host);
   $hostfilename = preg_replace("([^a-z0-9])", '', $host);
   $cache_filename = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".api.json";
-  $data["data"] = check_json($host,$port);
+  $data["data"] = check_json($host, $ip, $port);
 } elseif(isset($_GET['csr']) && !empty($_GET['csr'])) {
   $write_cache = 1;
   $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".api.json";

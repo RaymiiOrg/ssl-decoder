@@ -15,17 +15,24 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function check_json($host,$port) {
+function check_json($host,$ip,$port) {
+  global $timeout;
   $data = [];
   $stream = stream_context_create (array("ssl" => 
     array("capture_peer_cert" => true,
     "capture_peer_cert_chain" => true,
     "verify_peer" => false,
+    "peer_name" => $host,
     "verify_peer_name" => false,
     "allow_self_signed" => true,
     "capture_session_meta" => true,
     "sni_enabled" => true)));
-  $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
+  if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 )) {
+    $connect_ip = "[" . $ip . "]";
+  } else {
+    $connect_ip = $ip;
+  }
+  $read_stream = stream_socket_client("ssl://$connect_ip:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $stream);
   if ( $read_stream === false ) {
     $data["error"] = ["Failed to connect: " . htmlspecialchars($errstr)];
     return $data;
@@ -44,8 +51,8 @@ function check_json($host,$port) {
         $prev = $chain_data[$key-1];
         $chain_key = (string)$key+1;
         if ($key == 0) {
-          $data["connection"] = ssl_conn_metadata_json($host, $port, $read_stream, $chain_data);
-          $data["chain"][$chain_key] = cert_parse_json($curr, $next, $host, true);
+          $data["connection"] = ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data);
+          $data["chain"][$chain_key] = cert_parse_json($curr, $next, $host, $ip, true);
         } else {
           $data["chain"][$chain_key] = cert_parse_json($curr, $next, null, false);
         }

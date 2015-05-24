@@ -45,17 +45,17 @@ foreach (glob("functions/*.php") as $filename) {
     echo '<div id="wrapper">';
     $data = [];
     $hostname = mb_strtolower(get($_GET['host']));
-    $host = parse_hostname($hostname);
-    if ($host['port']) {
-      $port = $host['port'];
-    } else {
-      $port = get($_GET['port'], '443');
-    }
-    $host = $host['hostname'];
+    $hostname = parse_hostname($hostname);
+    $host = $hostname['hostname'];
+    $port = get($_GET['port'], '443');
     if ( !is_numeric($port) ) {
       $port = 443;
     }
-    $data["data"] = check_json($host,$port);
+    if ($hostname['multiple_ip']) {
+      choose_endpoint($hostname['multiple_ip'], $host, $port, $_GET['ciphersuites']);
+    } 
+    $ip = $hostname['ip'];
+    $data["data"] = check_json($host,$ip,$port);
     if(isset($data["data"]["error"])) {
       $data["error"] = $data["data"]["error"];
       unset($data["data"]);
@@ -147,7 +147,7 @@ foreach (glob("functions/*.php") as $filename) {
 
         // connection data
         echo "<div class='content'><section id='conndata'>";
-        echo "<header><h2>Connection Data for " . htmlspecialchars($host) . "</h2></header>";
+        echo "<header><h2>Connection Data for " . htmlspecialchars($host) . " / " . htmlspecialchars($ip) . "</h2></header>";
         ssl_conn_metadata($data["data"]["connection"]);
         echo "</section></div>";
 
@@ -184,14 +184,10 @@ foreach (glob("functions/*.php") as $filename) {
     }
   }
 
-  
-  
-  ?>
-     </div>
-    </div>
-  </div>
+  echo "</div>";
+  echo "</div>";
+  echo "</div>";
 
-<?php
 require_once("inc/footer.php");
 
 if ($write_cache == 1) {

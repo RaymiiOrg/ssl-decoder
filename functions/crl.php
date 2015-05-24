@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function crl_verify($raw_cert_data, $verbose=true) {
-    global $random_blurp;
+    global $random_blurp, $timeout;
     $cert_data = openssl_x509_parse($raw_cert_data);
     $cert_serial_nm = strtoupper(bcdechex($cert_data['serialNumber']));   
     $crl_uris = [];
@@ -35,7 +35,7 @@ function crl_verify($raw_cert_data, $verbose=true) {
             if (0 === strpos($uri, 'http')) {
                 $fp = fopen ("/tmp/" . $random_blurp .  "." . $key . ".crl", 'w+');
                 $ch = curl_init(($uri));
-                curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
                 curl_setopt($ch, CURLOPT_FILE, $fp);
                 curl_setopt($ch, CURLOPT_FAILONERROR, true);
                 curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
@@ -100,7 +100,7 @@ function crl_verify($raw_cert_data, $verbose=true) {
 
 
 function crl_verify_json($raw_cert_data) {
-  global $random_blurp;
+  global $random_blurp, $timeout;
   $result = [];
   $cert_data = openssl_x509_parse($raw_cert_data);
   $cert_serial_nm = strtoupper(bcdechex($cert_data['serialNumber']));   
@@ -121,7 +121,7 @@ function crl_verify_json($raw_cert_data) {
       $result[$crl_no]["crl_uri"] = $uri;
       $fp = fopen ("/tmp/" . $random_blurp .  "." . $key . ".crl", 'w+');
       $ch = curl_init(($uri));
-      curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
       curl_setopt($ch, CURLOPT_FILE, $fp);
       curl_setopt($ch, CURLOPT_FAILONERROR, true);
       curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);

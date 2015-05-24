@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5
+
+- Show specific endpoint picker when multiple A/AAAA records exist.
+- Add support for testing specific IP's with specific hostnames (instead of what DNS says)
+
 ## 2.4
 
 - Add SSL Compressio check

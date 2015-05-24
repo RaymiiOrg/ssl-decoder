@@ -27,11 +27,13 @@ function get(&$var, $default=null) {
   return isset($var) ? $var : $default;
 }
 
-function server_http_headers($host, $port){
+function server_http_headers($host, $ip, $port){
+  global $timeout;
   // first check if server is http. otherwise long timeout.
-  $ch = curl_init(("https://" . $host . ":" . $port));
-  curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+  $ch = curl_init(("https://" . $ip . ":" . $port));
+  curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
   curl_setopt($ch, CURLOPT_NOBODY, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: $host"));
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   curl_setopt($ch, CURLOPT_FAILONERROR, true);
   curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
@@ -49,23 +51,25 @@ function server_http_headers($host, $port){
       array("verify_peer" => false,
         "capture_session_meta" => true,
         "verify_peer_name" => false,
+        "peer_name" => $host,
         "allow_self_signed" => true,
         "sni_enabled" => true),
       'http' => array(
         'method' => 'GET',
         'max_redirects' => 1,
-        'timeout' => 2
+        'timeout' => $timeout
         )
       )
     );
-  $headers = get_headers("https://$host:$port", 1);
+  $headers = get_headers("https://$ip:$port", 1);
   if (!empty($headers)) {
     $headers = array_change_key_case($headers, CASE_LOWER);
     return $headers;
   }
 }
 
-function ssl_conn_ciphersuites($host, $port, $ciphersuites){
+function ssl_conn_ciphersuites($host, $ip, $port, $ciphersuites) {
+  global $timeout;
   $old_error_reporting = error_reporting();
   error_reporting($old_error_reporting ^ E_WARNING); 
   $results = array();
@@ -75,9 +79,10 @@ function ssl_conn_ciphersuites($host, $port, $ciphersuites){
     array("verify_peer" => false,
       "verify_peer_name" => false,
       "allow_self_signed" => true,
+      "peer_name" => $host,
       'ciphers' => $value,
       "sni_enabled" => true)));
-    $read_stream = stream_socket_client("ssl://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream);
+    $read_stream = stream_socket_client("ssl://$ip:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $stream);
     if ( $read_stream === false ) {
       $results[$value] = false;
     } else {
@@ -88,7 +93,7 @@ function ssl_conn_ciphersuites($host, $port, $ciphersuites){
   return $results;
 }
 
-function test_heartbleed($host, $port) {
+function test_heartbleed($ip, $port) {
   global $current_folder;
   $exitstatus = 0;
   $output = 0;
@@ -100,7 +105,7 @@ function test_heartbleed($host, $port) {
   # check if python2 is available
   exec("command -v python2 >/dev/null 2>&1", $cmdoutput, $cmdexitstatus);
   if ($cmdexitstatus != 1) {
-    exec("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($host) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent", $output, $exitstatus);
+    exec("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($ip) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent", $output, $exitstatus);
     if (file_exists($tmpfile)) {
       $json_data = json_decode(file_get_contents($tmpfile),true);
       foreach ($json_data as $key => $value) {
@@ -118,10 +123,11 @@ function test_heartbleed($host, $port) {
   return $result;
 }
 
-function test_sslv2($host, $port) {
+function test_sslv2($ip, $port) {
+  global $timeout;
   $exitstatus = 0;
   $output = 0;
-  exec('echo | timeout 2 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -ssl2 2>&1 >/dev/null', $output, $exitstatus); 
+  exec('echo | timeout ' . $timeout . ' openssl s_client -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -ssl2 2>&1 >/dev/null', $output, $exitstatus); 
   if ($exitstatus == 0) { 
     $result = true;
   } else {
@@ -130,12 +136,12 @@ function test_sslv2($host, $port) {
   return $result;
 }
 
-## python2 inc/heartbleed.py 85.222.224.236 --json tmp --max 1 --threads 1 --port 443
-
-function conn_compression($host, $port) {
+function conn_compression($host, $ip, $port) {
+  global $timeout;
   $exitstatus = 0;
   $output = 0;
-  exec('echo | timeout 2 openssl s_client -connect "' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"', $output, $exitstatus); 
+  //pre_dump('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"'); 
+  exec('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"', $output, $exitstatus); 
   if ($exitstatus == 0) { 
     $result = false;
   } else {
@@ -144,7 +150,8 @@ function conn_compression($host, $port) {
   return $result;
 }
 
-function ssl_conn_protocols($host, $port){
+function ssl_conn_protocols($host, $ip, $port) {
+  global $timeout;
   $old_error_reporting = error_reporting();
   error_reporting($old_error_reporting ^ E_WARNING); 
   $results = array('sslv2' => false, 
@@ -159,10 +166,11 @@ function ssl_conn_protocols($host, $port){
     array("verify_peer" => false,
       "capture_session_meta" => true,
       "verify_peer_name" => false,
+      "peer_name" => $host,
       "allow_self_signed" => true,
       'crypto_method' => STREAM_CRYPTO_METHOD_SSLv3_CLIENT,
       "sni_enabled" => true)));
-  $read_stream_sslv3 = stream_socket_client("sslv3://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_sslv3);
+  $read_stream_sslv3 = stream_socket_client("sslv3://$ip:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $stream_sslv3);
   if ( $read_stream_sslv3 === false ) {
     $results['sslv3'] = false;
   } else {
@@ -173,10 +181,11 @@ function ssl_conn_protocols($host, $port){
     array("verify_peer" => false,
       "capture_session_meta" => true,
       "verify_peer_name" => false,
+      "peer_name" => $host,
       "allow_self_signed" => true,
       'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_0_CLIENT,
       "sni_enabled" => true)));
-  $read_stream_tlsv10 = stream_socket_client("tlsv1.0://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv10);
+  $read_stream_tlsv10 = stream_socket_client("tlsv1.0://$ip:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $stream_tlsv10);
   if ( $read_stream_tlsv10 === false ) {
     $results['tlsv1.0'] = false;
   } else {
@@ -188,9 +197,10 @@ function ssl_conn_protocols($host, $port){
       "capture_session_meta" => true,
       "verify_peer_name" => false,
       "allow_self_signed" => true,
+      "peer_name" => $host,
       'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_1_CLIENT,
       "sni_enabled" => true)));
-  $read_stream_tlsv11 = stream_socket_client("tlsv1.1://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv11);
+  $read_stream_tlsv11 = stream_socket_client("tlsv1.1://$ip:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $stream_tlsv11);
   if ( $read_stream_tlsv11 === false ) {
     $results['tlsv1.1'] = false;
   } else {
@@ -202,9 +212,10 @@ function ssl_conn_protocols($host, $port){
       "capture_session_meta" => true,
       "verify_peer_name" => false,
       "allow_self_signed" => true,
+      "peer_name" => $host,
       'crypto_method' => STREAM_CRYPTO_METHOD_TLSv_1_2_CLIENT,
       "sni_enabled" => true)));
-  $read_stream_tlsv12 = stream_socket_client("tlsv1.2://$host:$port", $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $stream_tlsv12);
+  $read_stream_tlsv12 = stream_socket_client("tlsv1.2://$ip:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $stream_tlsv12);
   if ( $read_stream_tlsv12 === false ) {
     $results['tlsv1.2'] = false;
   } else {
@@ -228,7 +239,7 @@ function ssl_conn_metadata($data) {
     }
     foreach ($data["warning"] as $key => $value) {
       echo "<div class='alert alert-danger' role='alert'>";
-      echo htmlspecialchars($value);
+      echo $value;
       echo "</div>";
     }
   }
@@ -525,13 +536,18 @@ function ssl_conn_metadata($data) {
 
 
 
-function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
+function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=null) {
   $result = array();
   global $random_blurp;
   global $current_folder;
   $context = stream_context_get_params($read_stream);
   $context_meta = stream_context_get_options($read_stream)['ssl']['session_meta'];
   $cert_data = openssl_x509_parse($context["options"]["ssl"]["peer_certificate"])[0];
+
+  if (filter_var(preg_replace('/[^A-Za-z0-9\.\:-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 )) {
+    $result["warning"][] = "You are testing an IPv6 host. Due to <a href=\"https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest\">bugs</a> in OpenSSL's command line tools the results will be inaccurate. Known incorrect are OCSP Stapling, TLS_FALLBACK_SCSV and SSL Compression results, others may also be incorrect.";
+  } 
+  
   $result["checked_hostname"] = $host;
   //chain
   if (isset($context_meta)) { 
@@ -573,20 +589,18 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       unlink('/tmp/verify_cert.' . $random_blurp . '.pem');
     }
     // hostname ip port
-    if (fixed_gethostbyname($host)) {
-      $result["ip"] = fixed_gethostbyname($host);
-      $result["hostname"] = gethostbyaddr(fixed_gethostbyname($host));
-      $result["port"] = $port;
-    }
+    $result["ip"] = $ip;
+    $result["hostname"] = gethostbyaddr($ip);
+    $result["port"] = $port;
 
     //heartbleed
-    $result['heartbleed'] = test_heartbleed($host, $port);
+    $result['heartbleed'] = test_heartbleed($ip, $port);
     if ($result['heartbleed'] == "vulnerable") {
       $result["warning"][] = 'Vulnerable to the Heartbleed bug. Please update your OpenSSL ASAP!';
     }
 
     // compression
-    $compression = conn_compression($host, $port);
+    $compression = conn_compression($host, $ip, $port);
     if ($compression == false) { 
       $result["compression"] = false;
     } else {
@@ -595,7 +609,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
     }
 
     // protocols
-    $result["protocols"] = array_reverse(ssl_conn_protocols($host, $port));
+    $result["protocols"] = array_reverse(ssl_conn_protocols($host, $ip, $port));
     foreach ($result["protocols"] as $key => $value) {
       if ( $value == true ) {
         if ( $key == "sslv2") {
@@ -731,7 +745,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
         'NULL-SHA256',
         'NULL-SHA',
         'NULL-MD5');
-      $tested_ciphersuites = ssl_conn_ciphersuites($host, $port, $ciphersuites_to_test);
+      $tested_ciphersuites = ssl_conn_ciphersuites($host, $ip, $port, $ciphersuites_to_test);
       $result["supported_ciphersuites"] = array();
       foreach ($tested_ciphersuites as $key => $value) {
         if ($value == true) {
@@ -744,7 +758,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       $result["used_ciphersuite"]["bits"] = $context_meta['cipher_bits'];
     }
     // tls_fallback_scsv
-    $fallback = tls_fallback_scsv($host, $port);
+    $fallback = tls_fallback_scsv($host, $ip, $port);
     if ($fallback['protocol_count'] == 1) {
       $result["tls_fallback_scsv"] = "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
     } else {
@@ -756,7 +770,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       }
     }
     //hsts
-    $headers = server_http_headers($host, $port);
+    $headers = server_http_headers($host, $ip, $port);
     if ($headers["strict-transport-security"]) {
       if ( is_array($headers["strict-transport-security"])) {
       $result["strict_sransport-security"] = substr($headers["strict-transport-security"][0], 0, 50);
@@ -785,7 +799,7 @@ function ssl_conn_metadata_json($host, $port, $read_stream, $chain_data=null) {
       }
     } 
     // ocsp stapling
-    $stapling = ocsp_stapling($host,$port);
+    $stapling = ocsp_stapling($host, $ip, $port);
     if($stapling["working"] == 1) {
       $result["ocsp_stapling"] = $stapling;
     } else {
