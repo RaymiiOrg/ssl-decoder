@@ -77,6 +77,7 @@ function parse_hostname($u_hostname){
 }
 
 function choose_endpoint($ips, $host, $port, $ciphersuites) {
+    global $version;
     echo "<div id='page-content-wrapper'>\n";
     echo "<div class='container-fluid'>\n";
     echo "<div class='row'>\n";
