@@ -55,7 +55,7 @@ The default timeout for checks is 2 seconds. If this is to fast for your interna
 
 ### OpenSSL compilation
 
-If you want to use the latest OpenSSL and your distro doesn't shit with it you can compile your own OpenSSL and replace the system one. Do note that this might break stuff.
+If you want to use the latest OpenSSL and your distro doesn't ship with it, you can compile your own OpenSSL and replace the system one. Do note that this might break stuff.
 
     cd /usr/local/src
     wget https://openssl.org/source/openssl-1.0.2.tar.gz
