@@ -50,9 +50,7 @@ function parse_hostname($u_hostname){
         $parts[1] = preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $parts[1]);
         if (filter_var($parts[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) or filter_var($parts[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 )) {
             $ip = mb_strtolower($parts[1]);
-        } else {
-            $ip = fixed_gethostbyname($hostname);
-        }
+        } 
     } else {
         if (filter_var($hostname, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 )) {
             $ip = $hostname;

@@ -15,7 +15,18 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function fixed_gethostbyname($host) {
-  $ip = gethostbyname($host);
+  $ips = dns_get_record($host, DNS_A + DNS_AAAA);
+  sort($ips);
+  foreach ($ips as $key => $value) {
+    if ($value['type'] === "AAAA") {
+      $ip = $value['ipv6'];
+    } elseif ($value['type'] === "A") {
+      $ip = $value['ip'];
+    } else {
+      return false;
+    }
+  }
+  pre_dump($ips);
   if ($ip != $host) { 
     return $ip; 
   } else {
