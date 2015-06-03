@@ -26,7 +26,6 @@ function fixed_gethostbyname($host) {
       return false;
     }
   }
-  pre_dump($ips);
   if ($ip != $host) { 
     return $ip; 
   } else {
