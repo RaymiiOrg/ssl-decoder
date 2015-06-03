@@ -58,7 +58,7 @@ function parse_hostname($u_hostname){
             $dns_a_records = dns_get_record($hostname, DNS_A);
             $dns_aaaa_records = dns_get_record($hostname, DNS_AAAA);
             $dns_records = array_merge($dns_a_records, $dns_aaaa_records);
-            if (count($dns_a_records) > 1 or count($dns_aaaa_records) > 1) {
+            if (count($dns_a_records) > 1 or count($dns_aaaa_records) > 1 or (count($dns_a_records) + count($dns_aaaa_records) > 1)) {
                 $result = array('hostname' => $hostname, 'ip' => $ip, 'multiple_ip' => $dns_records);
                 return $result;
             } else {
