@@ -16,6 +16,10 @@
 
 function tls_fallback_scsv($host, $ip, $port) {
     global $timeout;
+    if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+        return false;
+    }
     $result = [];
     $protocols = ssl_conn_protocols($host, $ip, $port);
     if (count(array_filter($protocols)) > 1) {

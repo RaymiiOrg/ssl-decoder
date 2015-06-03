@@ -150,6 +150,10 @@ function test_sslv2($ip, $port) {
 
 function conn_compression($host, $ip, $port) {
   global $timeout;
+  if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+    return true;
+  }
   $exitstatus = 0;
   $output = 0;
   //pre_dump('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"'); 
@@ -616,8 +620,14 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
     if ($compression == false) { 
       $result["compression"] = false;
     } else {
-      $result["compression"] = true;
-      $result["warning"][] = 'SSL compression enabled. Please disable to prevent attacks like CRIME.';
+      if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+        $result["warning"][] = 'SSL compression not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
+      } else {
+        $result["compression"] = true;
+        $result["warning"][] = 'SSL compression enabled. Please disable to prevent attacks like CRIME.';
+      }
+      
     }
 
     // protocols
@@ -777,8 +787,13 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
       if ($fallback['tls_fallback_scsv_support'] == 1) {
         $result["tls_fallback_scsv"] = "supported";
       } else {
-        $result["tls_fallback_scsv"] = "unsupported";
-        $result["warning"][] = "TLS_FALLBACK_SCSV unsupported. Please upgrade OpenSSL to enable. This offers downgrade attack protection.";
+        if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+        $result["warning"][] = 'TLS_FALLBACK_SCSV not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
+        } else {
+          $result["tls_fallback_scsv"] = "unsupported";
+          $result["warning"][] = "TLS_FALLBACK_SCSV unsupported. Please upgrade OpenSSL to enable. This offers downgrade attack protection.";
+        }
       }
     }
     //hsts
@@ -815,8 +830,13 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
     if($stapling["working"] == 1) {
       $result["ocsp_stapling"] = $stapling;
     } else {
-      $result["ocsp_stapling"] = "not set";
-      $result["warning"][] = "OCSP Stapling not enabled.";
+      if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+        $result["warning"][] = 'OCSP Stapling not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
+      } else {
+        $result["ocsp_stapling"] = "not set";
+        $result["warning"][] = "OCSP Stapling not enabled.";
+      }
     }
     
     $result["openssl_version"] = shell_exec("openssl version");
