@@ -606,7 +606,25 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
     }
     // hostname ip port
     $result["ip"] = $ip;
-    $result["hostname"] = gethostbyaddr($ip);
+    if (filter_var(preg_replace('/[^A-Za-z0-9\.\:-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 )) {
+      $addr = inet_pton(preg_replace('/[^A-Za-z0-9\.\:-]/', '', $ip));
+      $unpack = unpack('H*hex', $addr);
+      $hex = $unpack['hex'];
+      $arpa = implode('.', array_reverse(str_split($hex))) . '.ip6.arpa';
+      if (!empty(dns_get_record($arpa, DNS_PTR)[0]["target"])) {
+        $result["hostname"] = dns_get_record($arpa, DNS_PTR)[0]["target"];
+      } else {
+        $result["hostname"] = "$host (No PTR available).";
+      }
+    } elseif (filter_var(preg_replace('/[^A-Za-z0-9\.\:-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 )) {
+      if (!empty(gethostbyaddr(preg_replace('/[^A-Za-z0-9\.\:-]/', '', $ip)))) {
+        $result["hostname"] = gethostbyaddr(preg_replace('/[^A-Za-z0-9\.\:-]/', '', $ip));
+      } else {
+        $result["hostname"] = "$host (No PTR available).";
+      }
+    } else {
+      $result["hostname"] = "$host (No PTR available).";
+    }
     $result["port"] = $port;
 
     //heartbleed

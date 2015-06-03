@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.6
+
+- Fix testing of IPv6 only hosts.
+- Fix correct reverse DNS lookup for IPv6.
+- Don't test OCSP stapling, TLS_FALLBACK_SCSV and SSL Compression on IPv6 hosts because of bugs in OpenSSL's tools (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest). Don't give invalid test results, instead, give user a warning about it.
+- Add host header to get_headers function (fix #35).
+
 ## 2.5
 
 - Show specific endpoint picker when multiple A/AAAA records exist.

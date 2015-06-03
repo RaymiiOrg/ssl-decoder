@@ -20,7 +20,7 @@ $timeout = 2;
 # Don't change stuff down here.
 date_default_timezone_set('UTC');
 
-$version = 2.5;
+$version = 2.6;
 
 ini_set('default_socket_timeout', 2);
 
