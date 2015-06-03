@@ -57,6 +57,7 @@ function server_http_headers($host, $ip, $port){
       'http' => array(
         'method' => 'GET',
         'max_redirects' => 1,
+        'header' => 'Host: '.$host,
         'timeout' => $timeout
         )
       )
