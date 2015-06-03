@@ -127,6 +127,7 @@ foreach (glob("functions/*.php") as $filename) {
     }
   
     if ( !empty($host) ) {
+      echo "<div class='alert alert-info' role='alert'>Because of upcoming <a href='https://www.openprovider.co.uk/about-openprovider/news/upcoming-changes-somalian-so-domains'>.so TLD changes</a>, the SSL decoder's new domain is <a href='https://ssldecoder.org'>ssldecoder.org</a>. Please update your bookmarks.</div>";
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong></p>";
       if ( !empty($data["error"]) ) {
         echo "<span class='text-danger'>" . htmlspecialchars($data["error"][0]) . "</span>";
@@ -162,6 +163,7 @@ foreach (glob("functions/*.php") as $filename) {
     } elseif (!empty($_GET['csr']) ) {
       $data = csr_parse_json($_GET['csr']);
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p>";
+      echo "<div class='alert alert-info' role='alert'>Because of upcoming <a href='https://www.openprovider.co.uk/about-openprovider/news/upcoming-changes-somalian-so-domains'>.so TLD changes</a>, the SSL decoder's new domain is <a href='https://ssldecoder.org'>ssldecoder.org</a>. Please update your bookmarks.</div>";
       $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".html";
       $cache_filename_json = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".json";
       if ($write_cache == 1) {

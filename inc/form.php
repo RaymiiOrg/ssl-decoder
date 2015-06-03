@@ -5,6 +5,7 @@
         <div class="page-header" >
           <h1>SSL Decoder</h1>
         </div>
+        <div class='alert alert-danger' role='alert'>Because of upcoming <a href='https://www.openprovider.co.uk/about-openprovider/news/upcoming-changes-somalian-so-domains'>.so TLD changes</a>, the SSL decoder's new domain is <a href='https://ssldecoder.org'>ssldecoder.org</a>. Please update your bookmarks.</div>
         <div id='sslform'>
           <form class="form-horizontal">
             <p>Fill in either host + port or paste a CSR/Certficiate. Port defaults to 443.<br></p>
