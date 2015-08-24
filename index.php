@@ -86,6 +86,7 @@ foreach (glob("functions/*.php") as $filename) {
             $warntxt = " <sup>(<strong>".htmlspecialchars(count($value['warning']))."</strong>)</sup>";
           }
           echo "<li><a href='#cert".(string)$key."'><strong>".$key."</strong> : ". htmlspecialchars($value["cert_data"]["subject"]["CN"]) . $warntxt . "</a></li>";
+          $warntxt = "";
         }
         ?>
         <li><a href="<?php echo(htmlspecialchars($current_folder)); ?>">Try another website</a></li>
