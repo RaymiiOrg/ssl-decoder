@@ -79,7 +79,7 @@ foreach (glob("functions/*.php") as $filename) {
             $warntxt = " <sup>(<strong>".htmlspecialchars(count(array_unique($data["data"]["connection"]["warning"])))."</strong>)</sup>";
           }
         ?>
-        <li><a href="#conndata"><strong>0</strong>: Connection Data <?php echo $warntxt; ?></a></li>
+        <li><a href="#conndata"><strong>0</strong>: Connection Data <?php echo $warntxt; $warntxt = ''; ?></a></li>
         <?php
         foreach ($chain_data as $key => $value) {
           if (count($value['warning']) >= 1) {
