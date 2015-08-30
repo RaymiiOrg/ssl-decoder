@@ -519,7 +519,7 @@ function ssl_conn_metadata($data) {
       echo "<table class='table'>";
       foreach ($data["ocsp_stapling"] as $key => $value) {
         if ($key != "working") {
-          echo "<tr><td>" . htmlspecialchars($key) . "</td><td>" . htmlspecialchars($value) . "</td></tr>";
+          echo "<tr><td>" . htmlspecialchars(ucfirst(str_replace('_', ' ', $key))) . "</td><td>" . htmlspecialchars($value) . "</td></tr>";
         }
       } 
       echo "</table>";

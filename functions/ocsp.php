@@ -38,13 +38,13 @@ function ocsp_stapling($host, $ip, $port) {
       }
     }
     $result = array("working" => 1,
-      "Cert Status" => $lines["Cert Status"],
-      "This Update" => $lines["This Update"],
-      "Next Update" => $lines["Next Update"],
-      "Responder ID" => $lines["Responder Id"],
-      "Hash Algorithm" => $lines["Hash Algorithm"],
-      "Signature Algorithm" => $lines["Signature Algorithm"],
-      "Issuer Name Hash" => $lines["Issuer Name Hash"]);
+      "cert_status" => $lines["Cert Status"],
+      "this_update" => $lines["This Update"],
+      "next_update" => $lines["Next Update"],
+      "responder_id" => $lines["Responder Id"],
+      "hash_algorithm" => $lines["Hash Algorithm"],
+      "signature_algorithm" => $lines["Signature Algorithm"],
+      "issuer_name_hash" => $lines["Issuer Name Hash"]);
   }
   return $result;
 }
