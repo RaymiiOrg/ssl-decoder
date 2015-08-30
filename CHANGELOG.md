@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.7
+
+- Reset warning count in menu correctly.
+- Add debian weak keys check
+- Remove spaces from json variable names
+
 ## 2.6
 
 - Fix testing of IPv6 only hosts.
