@@ -517,6 +517,20 @@ function cert_parse($data) {
   echo "</td>";
   echo "</tr>";
   echo "<tr>";
+  echo "<td>";
+  echo "<a href='https://wiki.debian.org/SSLkeys'>Weak debian key</a>";
+  echo "</td>";
+  if ($data["key"]["weak_debian_rsa_key"] == 1) {
+    echo "<td>";
+    echo "<span class='text-danger glyphicon glyphicon-exclamation-sign'></span><span class='text-danger'> - This is a weak debian key. Replace it as soon as possible.</span>";
+    echo "</td>";
+  } else {
+    echo "<td>";
+    echo "<span class='text-success glyphicon glyphicon-exclamation-sign'></span><span class='text-success'> - This is not a weak debian key.</span>";
+    echo "</td>";
+  }
+  echo "</tr>";
+  echo "<tr>";
   echo "<td>Signature Algorithm</td>";
   echo "<td>";
   echo $data["key"]["signature_algorithm"];
@@ -821,12 +835,37 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
   // key details
   $key_details = openssl_pkey_get_details(openssl_pkey_get_public($raw_cert_data));
   $export_pem = "";
+
   openssl_x509_export($raw_cert_data, $export_pem);
   if (isset($key_details['rsa'])) {
     $result["key"]["type"] = "rsa";
     $result["key"]["bits"] = $key_details['bits'];
     if ($key_details['bits'] < 2048) {
       $result['warning'][] = $key_details['bits'] . " bit RSA key is not safe. Upgrade to at least 4096 bits.";
+    }
+    // weak debian key check
+    $bin_modulus = $key_details['rsa']['n'];
+    # blacklist format requires sha1sum of output from "openssl x509 -noout -modulus" including the Modulus= and newline.
+    # create the blacklist:
+    # https://packages.debian.org/source/squeeze/openssl-blacklist
+    # svn co svn://svn.debian.org/pkg-openssl/openssl-blacklist/
+    # find openssl-blacklist/trunk/blacklists/ -iname "*.db" -exec cat {} >> unsorted_blacklist.db \;
+    # sort -u unsorted_blacklist.db > debian_blacklist.db
+
+    $mod_sha1sum = sha1("Modulus=" . strtoupper(bin2hex($bin_modulus)) . "\n");
+    #pre_dump($mod_sha1sum);
+    $blacklist_file = fopen('inc/debian_blacklist.db', 'r');
+    $key_in_blacklist = false;
+    while (($buffer = fgets($blacklist_file)) !== false) {
+        if (strpos($buffer, $mod_sha1sum) !== false) {
+            $key_in_blacklist = true;
+            break; 
+        }      
+    }
+    fclose($blacklist_file);
+    if ($key_in_blacklist == true) {
+      $result["key"]["weak_debian_rsa_key"] = "true";
+      $result['warning'][] = "Weak Debian key found. Remove this key right now and create a new one. See <a href='https://wiki.debian.org/SSLkeys'>for more info</a>.";
     }
   } else if (isset($key_details['dsa'])) {
     $result["key"]["type"] = "dsa";
