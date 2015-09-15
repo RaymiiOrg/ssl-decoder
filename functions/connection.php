@@ -134,6 +134,23 @@ function test_heartbleed($ip, $port) {
   return $result;
 }
 
+function heartbeat_test($host, $port) {
+  global $random_blurp, $timeout;
+  $result = 0;
+
+  //pre_dump('echo | timeout ' . $timeout . ' openssl s_client -connect ' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . ' -servername ' . escapeshellcmd($host) . ' -tlsextdebug 2>&1 &lt; /dev/null | awk -F\" \'/server extension/ {print $2}\'');
+
+  $output = shell_exec('echo | timeout ' . $timeout . ' openssl s_client -connect ' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . ' -servername ' . escapeshellcmd($host) . ' -tlsextdebug 2>&1 </dev/null | awk -F\" \'/server extension/ {print $2}\'');
+
+  $output = preg_replace("/[[:blank:]]+/"," ", $output);
+  $output = explode("\n", $output);
+  $output = array_map('trim', $output);
+  if ( in_array("heartbeat", $output) ) {
+    $result = 1;
+  }
+  return $result;
+}
+
 function test_sslv2($ip, $port) {
   global $timeout;
   $exitstatus = 0;
@@ -473,6 +490,20 @@ function ssl_conn_metadata($data) {
     echo "</td>";
     echo "</tr>";
   }
+
+  echo "<tr>";
+  echo "<td>";
+  echo "Heartbeat Extension";
+  echo "</td>";
+  echo "<td>";
+
+  if ($data["heartbeat"] == "1") {
+    echo "Extension enabled.";
+  } else {
+    echo "Extenstion not enabled.";
+  } 
+  echo "</td>";
+  echo "</tr>";
 
   // headers
   echo "<tr>";
@@ -856,6 +887,8 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
       }
     }
     
+    $result["heartbeat"] = heartbeat_test($host, $port);
+
     $result["openssl_version"] = shell_exec("openssl version");
     $result["datetime_rfc2822"] = shell_exec("date --rfc-2822");
   } 
