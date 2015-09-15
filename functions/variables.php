@@ -98,7 +98,6 @@ function choose_endpoint($ips, $host, $port, $ciphersuites) {
     echo "</p>\n";
     echo "</div>\n";
     echo "<div id='resultDiv'></div>\n";
-    echo "<div class='alert alert-info' role='alert'>Because of upcoming <a href='https://www.openprovider.co.uk/about-openprovider/news/upcoming-changes-somalian-so-domains'>.so TLD changes</a>, the SSL decoder's new domain is <a href='https://ssldecoder.org'>ssldecoder.org</a>. Please update your bookmarks.</div>";
     echo "<div class='content'>\n<section id='choose_endpoint'>\n";
     echo "<header>\n<h2>Multiple endpoints for " . htmlspecialchars($host) . "</h2>\n</header>\n";
     echo "<p>We've found multiple results for " . htmlspecialchars($host) . ". Please choose the host you want to scan from the list below:</p>\n<br>\n";
