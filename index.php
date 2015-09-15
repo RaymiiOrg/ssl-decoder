@@ -30,7 +30,7 @@ foreach (glob("functions/*.php") as $filename) {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SSL Decoder</title>
+  <title>SSL Decoder</title>  
   <link rel="stylesheet" href="<?php echo(htmlspecialchars($current_folder)); ?>css/bootstrap.min.css">
   <link rel="stylesheet" href="<?php echo(htmlspecialchars($current_folder)); ?>css/ssl.css">
   <script src="<?php echo(htmlspecialchars($current_folder)); ?>js/jquery.min.js"></script> 
@@ -129,24 +129,29 @@ foreach (glob("functions/*.php") as $filename) {
     }
   
     if ( !empty($host) ) {
-      echo "<div class='alert alert-info' role='alert'>Because of upcoming <a href='https://www.openprovider.co.uk/about-openprovider/news/upcoming-changes-somalian-so-domains'>.so TLD changes</a>, the SSL decoder's new domain is <a href='https://ssldecoder.org'>ssldecoder.org</a>. Please update your bookmarks.</div>";
-      echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong></p>";
       if ( !empty($data["error"]) ) {
         echo "<span class='text-danger'>" . htmlspecialchars($data["error"][0]) . "</span>";
         echo "<hr>";
         $write_cache = 0;
       } else {
+
         $hostfilename = preg_replace("([^\w\s\d\-_~,;:\[\]\(\).])", '', $host);
         $hostfilename = preg_replace("([\.]{2,})", '', $host);
         $hostfilename = preg_replace("([^a-z0-9])", '', $host);
         $cache_filename = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".html";
         $cache_filename_json = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".json";
 
+        echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong></p>";
+
         if ($write_cache == 1) {
-          echo "This result is saved at most 60 days on <a href=\"";
+          echo "<p>This result is saved at most 60 days on <a href=\"";
           echo(htmlspecialchars($current_folder) . $cache_filename); 
-          echo "\">the following URL</a>. Do note that this might be deleted earlier if space runs out.";
+          echo "\">the following URL</a>. Do note that this might be deleted earlier if space runs out.<br></p>";
         }
+
+        echo "<script type='text/javascript'>document.title = \"" . htmlspecialchars($host) . ":" . htmlspecialchars($port) . " - SSL Decoder \"</script>";
+
+        echo "<p>Receive notifications when this certificate is about to expire with my other service, <a href='https://certificatemonitor.org/'>Certificate Monitor</a>.</p>";
 
         // connection data
         echo "<div class='content'><section id='conndata'>";
@@ -165,7 +170,6 @@ foreach (glob("functions/*.php") as $filename) {
     } elseif (!empty($_GET['csr']) ) {
       $data = csr_parse_json($_GET['csr']);
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p>";
-      echo "<div class='alert alert-info' role='alert'>Because of upcoming <a href='https://www.openprovider.co.uk/about-openprovider/news/upcoming-changes-somalian-so-domains'>.so TLD changes</a>, the SSL decoder's new domain is <a href='https://ssldecoder.org'>ssldecoder.org</a>. Please update your bookmarks.</div>";
       $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".html";
       $cache_filename_json = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".json";
       if ($write_cache == 1) {
