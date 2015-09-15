@@ -2,9 +2,12 @@
 
 ## 2.7
 
+- Add debian weak keys check.
+- Add Lets Encrypt Signing certs: https://letsencrypt.org/2015/06/04/isrg-ca-certs.html
+- Check heartbeat extension.
+- Set title based on check.
 - Reset warning count in menu correctly.
-- Add debian weak keys check
-- Remove spaces from json variable names
+- Remove spaces from json variable names.
 
 ## 2.6
 
