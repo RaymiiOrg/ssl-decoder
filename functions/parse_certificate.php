@@ -518,15 +518,15 @@ function cert_parse($data) {
   echo "</tr>";
   echo "<tr>";
   echo "<td>";
-  echo "<a href='https://wiki.debian.org/SSLkeys'>Weak debian key</a>";
+  echo "Weak debian key";
   echo "</td>";
   if ($data["key"]["weak_debian_rsa_key"] == 1) {
     echo "<td>";
-    echo "<span class='text-danger glyphicon glyphicon-exclamation-sign'></span><span class='text-danger'> - This is a weak debian key. Replace it as soon as possible.</span>";
+    echo "<span class='text-danger glyphicon glyphicon-exclamation-sign'></span><span class='text-danger'> - This is a <a href='https://wiki.debian.org/SSLkeys'>weak debian key</a>. Replace it as soon as possible.</span>";
     echo "</td>";
   } else {
     echo "<td>";
-    echo "<span class='text-success glyphicon glyphicon-exclamation-sign'></span><span class='text-success'> - This is not a weak debian key.</span>";
+    echo "This is not a <a href='https://wiki.debian.org/SSLkeys'>weak debian key</a>.";
     echo "</td>";
   }
   echo "</tr>";
@@ -865,7 +865,7 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
     fclose($blacklist_file);
     if ($key_in_blacklist == true) {
       $result["key"]["weak_debian_rsa_key"] = "true";
-      $result['warning'][] = "Weak Debian key found. Remove this key right now and create a new one. See <a href='https://wiki.debian.org/SSLkeys'>for more info</a>.";
+      $result['warning'][] = "Weak Debian key found. Remove this key right now and create a new one.";
     }
   } else if (isset($key_details['dsa'])) {
     $result["key"]["type"] = "dsa";
