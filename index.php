@@ -89,6 +89,8 @@ foreach (glob("functions/*.php") as $filename) {
           $warntxt = "";
         }
         ?>
+        <li><a href="#ctsubmit">Certificate Transparency</a></li>
+
         <li><a href="<?php echo(htmlspecialchars($current_folder)); ?>">Try another website</a></li>
         <li><hr></li>
         <li><a href="https://certificatemonitor.org/">Certificate Expiry Monitor</a></li>
@@ -153,7 +155,7 @@ foreach (glob("functions/*.php") as $filename) {
 
         echo "<p>Receive notifications when this certificate is about to expire with my other service, <a href='https://certificatemonitor.org/'>Certificate Monitor</a>.</p>";
 
-        // connection data
+      // connection data
         echo "<div class='content'><section id='conndata'>";
         echo "<header><h2>Connection Data for " . htmlspecialchars($host) . " / " . htmlspecialchars($ip) . "</h2></header>";
         ssl_conn_metadata($data["data"]["connection"]);
@@ -166,7 +168,38 @@ foreach (glob("functions/*.php") as $filename) {
           cert_parse($value);
           echo "</section></div>";
         }
-      }     
+
+        // submit to certificate transparency
+        echo "<div class='content'><section id='ctsubmit'>";
+        echo "<header><h2>Certificate Transparency Submission</h2></header>";
+        echo "<p><a href='http://www.certificate-transparency.org/'>Information about Certificate Transparency</a></p>";
+        foreach ($ct_urls as $ct_url) {
+          echo "<table class='table table-striped table-bordered'>";
+          echo "<tr><td>CT Log URL</td><td>" . htmlspecialchars($ct_url) . "</td></tr>";
+          $submitToCT = submitCertToCT($data["data"]["chain"], $ct_url);
+          $ct_result = json_decode($submitToCT, TRUE);
+          if ($ct_result === null
+            && json_last_error() !== JSON_ERROR_NONE) {
+            echo "<tr><td width='20%'>Result</td><td width='80%' style='font-family:monospace;'>". htmlspecialchars($submitToCT) . "</td></tr>";
+          } else {
+            if (is_array($ct_result)) {
+              foreach ($ct_result as $key => $value) {
+                if (is_bool($key)) {
+                  $key = ($key) ? 'True' : 'False';
+                }
+                if (is_bool($value)) {
+                  $value = ($value) ? 'True' : 'False';
+                }
+
+                echo "<tr><td width='20%'>" . htmlspecialchars(ucfirst(str_replace('_', ' ', $key))) . "</td><td width='80%' style='font-family:monospace;'>" . wordwrap(htmlspecialchars($value), 65, "<br />", 1) . "</td></tr>";
+                
+              } 
+            }
+          }
+          echo "</table>";
+        }
+        echo "</section></div>";
+      }
     } elseif (!empty($_GET['csr']) ) {
       $data = csr_parse_json($_GET['csr']);
       echo "<p><strong>This tool does not make conclusions. Please check the data and define the validity yourself!</strong><br>\n &nbsp;</p>";

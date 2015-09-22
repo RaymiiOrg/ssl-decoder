@@ -252,8 +252,9 @@ function cert_parse($data) {
   echo "<td>";
   foreach ( explode("DNS:", $data['cert_data']['extensions']['subjectAltName']) as $altName ) {
     if ( !empty(str_replace(',', " ", "$altName"))) {
+      echo "<span style='font-family:monospace;'>";
       echo htmlspecialchars(str_replace(',', " ", "$altName"));
-      echo "<br>";
+      echo "</span><br>";
     }
   } 
   echo "</td>";
@@ -275,9 +276,9 @@ function cert_parse($data) {
   echo "</tr>";
   echo "<tr>";
   echo "<td>Full Subject</td>";
-  echo "<td>";
+  echo "<td><span style='font-family:monospace;'>";
   echo htmlspecialchars($data['cert_data']['name']);
-  echo "</td>";
+  echo "</span></td>";
   echo "</tr>";
   echo "<tr>";
   echo "<td colspan='2'><strong>Issuer</strong></td>";
@@ -503,7 +504,7 @@ function cert_parse($data) {
     echo "<tr>";
     echo "<td>Serial</td>";
     echo "<td>";
-    echo htmlspecialchars($data['serialNumber']);
+    echo "<span style='font-family:monospace;'>" . htmlspecialchars($data['serialNumber']) . "</span>";
     echo "</td>";
     echo "</tr>";
   }
@@ -633,7 +634,7 @@ function cert_parse($data) {
     echo "<tr>";
     echo "<td><a href='https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html'>SPKI Hash</a></td>";
     echo "<td>";
-    print(htmlspecialchars($data['key']['spki_hash']));
+    print("<span style='font-family:monospace;'>" . htmlspecialchars($data['key']['spki_hash']) . "</span>");
     echo "</td>";
     echo "</tr>";
   }

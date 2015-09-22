@@ -14,6 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+function submitCertToCT($chain, $ct_url) {
+  $ct_chain = array('chain' => []);
+  foreach ($chain as $key => $value) {
+    $string = $value['key']['certificate_pem'];
+    $pattern = '/-----(.*)-----/';
+    $replacement = '';
+    $string = preg_replace($pattern, $replacement, $string);
+    $pattern = '/\n/';
+    $replacement = '';
+    $string = preg_replace($pattern, $replacement, $string);
+    array_push($ct_chain['chain'], $string);    
+  }
+  $post_data = json_encode($ct_chain);
+  $ch = curl_init();  
+  curl_setopt($ch, CURLOPT_URL, $ct_url . "/ct/v1/add-chain");
+  curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+  curl_setopt($ch, CURLOPT_NOBODY, true);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_FAILONERROR, false);
+  curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+  curl_setopt($ch, CURLOPT_HEADER, false); 
+  curl_setopt($ch, CURLOPT_POST, count($post_data));
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);    
+  $ct_output = curl_exec($ch);
+  curl_close($ch);
+  return $ct_output;
+}
+
 function fixed_gethostbyname($host) {
   $ips = dns_get_record($host, DNS_A + DNS_AAAA);
   sort($ips);
@@ -561,6 +592,7 @@ function ssl_conn_metadata($data) {
     echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>No OCSP stapling response received.</span>";
   }
   echo "</td>";
+
   // openssl version
   echo "</tr>";
   echo "<tr>";

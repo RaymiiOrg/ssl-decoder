@@ -56,6 +56,27 @@ function check_json($host,$ip,$port) {
         } else {
           $data["chain"][$chain_key] = cert_parse_json($curr, $next, null, false);
         }
+        // certificate transparency
+        $ct_urls = ["https://ct.ws.symantec.com", 
+        "https://ct.googleapis.com/pilot",
+        "https://ct.googleapis.com/aviator", 
+        "https://ct.googleapis.com/rocketeer",
+        "https://ct1.digicert-ct.com/log",
+        "https://ct.izenpe.com",
+        "https://ctlog.api.venafi.com", 
+        "https://log.certly.io"];
+        $data["certificate_transparency"] = [];
+        foreach ($ct_urls as $ct_url) {
+          $submitToCT = submitCertToCT($data["chain"], $ct_url);
+          $ct_result = json_decode($submitToCT, TRUE);
+          if ($ct_result === null
+            && json_last_error() !== JSON_ERROR_NONE) {
+            $result_ct = array('result' => $submitToCT);
+            $data["certificate_transparency"][$ct_url] = $result_ct;
+          } else {
+           $data["certificate_transparency"][$ct_url] = $ct_result;
+          }
+        }
       } 
     } else {
       $data["error"] = ["Chain too long."];

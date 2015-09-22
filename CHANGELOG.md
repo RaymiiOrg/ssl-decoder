@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.8
+
+- Add Certificate Transparency Submission
+- Small formatting changes
+
+
 ## 2.7
 
 - Add debian weak keys check.
