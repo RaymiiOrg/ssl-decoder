@@ -12,7 +12,7 @@
               <div class="form-group">
                 <label class="col-md-1 control-label" for="host">Host </label>  
                 <div class="col-md-5">
-                  <input id="host" name="host" type="text" placeholder="raymii.org (or Host:IP to test a specific hostname on an IP)" class="form-control input-md" >
+                  <input id="host" name="host" type="text" placeholder="raymii.org (or Host:IP to test a specific hostname on an IP)" autofocus="autofocus" class="form-control input-md" >
                 </div>
                 <label class="col-md-1 control-label" for="port">Port</label>  
                 <div class="col-md-2">
