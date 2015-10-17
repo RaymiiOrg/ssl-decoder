@@ -720,7 +720,6 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
       }
 
       // ciphersuites
-      if ($_GET['ciphersuites'] == 1) {   
         $ciphersuites_to_test = array('ECDHE-RSA-AES256-GCM-SHA384',
           'ECDHE-ECDSA-AES256-GCM-SHA384',
           'ECDHE-RSA-AES256-SHA384',
@@ -847,10 +846,6 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
           }
         }
         
-      } else {
-        $result["used_ciphersuite"]["name"] = $context_meta['cipher_name'];
-        $result["used_ciphersuite"]["bits"] = $context_meta['cipher_bits'];
-      }
       // tls_fallback_scsv
       $fallback = tls_fallback_scsv($host, $ip, $port);
       if ($fallback['protocol_count'] == 1) {
