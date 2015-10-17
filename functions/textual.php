@@ -54,6 +54,7 @@ function get_current_folder(){
     return $folder;
 }
 
+$current_folder = get_current_folder();
 
 function gen_uuid() {
   return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',

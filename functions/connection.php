@@ -288,7 +288,7 @@ function ssl_conn_protocols($host, $ip, $port) {
   return $results;
 }
 
-function ssl_conn_metadata($data) {
+function ssl_conn_metadata($data,$fastcheck=0) {
   global $random_blurp;
   global $current_folder;
   $chain_length = count($data["chain"]);
@@ -351,61 +351,61 @@ function ssl_conn_metadata($data) {
     echo "</td>";
     echo "</tr>";
   }
-  // protocols
-  echo "<tr>";
-  echo "<td>Protocols</td>";
-  echo "<td>";
-  $protocols = $data["protocols"];
-  foreach ($protocols as $key => $value) {
-    if ( $value == true ) {
-      if ( $key == "tlsv1.2") {
-        echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">TLSv1.2 (Supported)</span></p>';
-      } else if ( $key == "tlsv1.1") {
-        echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
-      } else if ( $key == "tlsv1.0") {
-        echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
-      } else if ( $key == "sslv3") {
-        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported) </span>';
-        echo "<a href='https://blog.mozilla.org/security/2014/10/14/the-poodle-attack-and-the-end-of-ssl-3-0/' data-toggle='tooltip' data-placement='top' title='SSLv3 is old and broken. It makes you vulerable for the POODLE attack. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
-      } else if ( $key == "sslv2") {
-        echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv2 (Supported) </span>';
-        echo "<a href='http://www.rapid7.com/db/vulnerabilities/sslv2-and-up-enabled' data-toggle='tooltip' data-placement='top' title='SSLv2 is old and broken. It was replaced by SSLv3 in 1996. It does not support intermediate certs and has flaws in the crypto. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
+    if($fastcheck == 0) {
+    // protocols
+    echo "<tr>";
+    echo "<td>Protocols</td>";
+    echo "<td>";
+    $protocols = $data["protocols"];
+    foreach ($protocols as $key => $value) {
+      if ( $value == true ) {
+        if ( $key == "tlsv1.2") {
+          echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">TLSv1.2 (Supported)</span></p>';
+        } else if ( $key == "tlsv1.1") {
+          echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.1 (Supported)</p>';
+        } else if ( $key == "tlsv1.0") {
+          echo '<p><span class="glyphicon glyphicon-ok"></span> - TLSv1.0 (Supported)</p>';
+        } else if ( $key == "sslv3") {
+          echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv3 (Supported) </span>';
+          echo "<a href='https://blog.mozilla.org/security/2014/10/14/the-poodle-attack-and-the-end-of-ssl-3-0/' data-toggle='tooltip' data-placement='top' title='SSLv3 is old and broken. It makes you vulerable for the POODLE attack. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
+        } else if ( $key == "sslv2") {
+          echo '<p><span class="text-danger glyphicon glyphicon-ok"></span> - <span class="text-danger">SSLv2 (Supported) </span>';
+          echo "<a href='http://www.rapid7.com/db/vulnerabilities/sslv2-and-up-enabled' data-toggle='tooltip' data-placement='top' title='SSLv2 is old and broken. It was replaced by SSLv3 in 1996. It does not support intermediate certs and has flaws in the crypto. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
+        } else {
+          echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
+        }
       } else {
-        echo '<p><span class="glyphicon glyphicon-ok"></span> - <span>'.$key.' (Supported)</span></p>';
-      }
-    } else {
-      if ( $key == "tlsv1.2") {
-        echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span> ';
-        echo "<a href='http://www.yassl.com/yaSSL/Blog/Entries/2010/10/7_Differences_between_SSL_and_TLS_Protocol_Versions.html' data-toggle='tooltip' data-placement='top' title='TLSv1.2 was released in 2008. It is the most recent and secure version of the protocol. It adds TLS extensions and the AES ciphersuites plus other features and fixes. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
-      } else if ( $key == "tlsv1.1") {
-        echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.1  (Not supported)</p>';
-      } else if ( $key == "tlsv1.0") {
-        echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.0  (Not supported)</p>';
-      } else if ( $key == "sslv3") {
-        echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv3 (Not supported)</span></p>';
-      } else if ( $key == "sslv2") {
-        echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv2 (Not supported)</span></p>';
-      } else {
-        echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
+        if ( $key == "tlsv1.2") {
+          echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">TLSv1.2 (Not supported)</span> ';
+          echo "<a href='http://www.yassl.com/yaSSL/Blog/Entries/2010/10/7_Differences_between_SSL_and_TLS_Protocol_Versions.html' data-toggle='tooltip' data-placement='top' title='TLSv1.2 was released in 2008. It is the most recent and secure version of the protocol. It adds TLS extensions and the AES ciphersuites plus other features and fixes. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
+        } else if ( $key == "tlsv1.1") {
+          echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.1  (Not supported)</p>';
+        } else if ( $key == "tlsv1.0") {
+          echo '<p><span class="glyphicon glyphicon-remove"></span> - TLSv1.0  (Not supported)</p>';
+        } else if ( $key == "sslv3") {
+          echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv3 (Not supported)</span></p>';
+        } else if ( $key == "sslv2") {
+          echo '<p><span class="text-success glyphicon glyphicon-remove"></span> - <span class="text-success">SSLv2 (Not supported)</span></p>';
+        } else {
+          echo '<p><span class="glyphicon glyphicon-remove"></span> - <span>'.$key.'(Not supported)</span></p>';
+        }
       }
     }
-  }
-  echo "</td>";
-  echo "</tr>";
-  echo "<tr>";
-  echo "<td>SSL Compression</td>";
-  echo "<td>";
-  if ($data['compression'] == false) {
-    echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">SSL Compression disabled</span></p>';
-  } else {
-    echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">SSL Compression enabled</span> ';
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>SSL Compression</td>";
+    echo "<td>";
+    if ($data['compression'] == false) {
+      echo '<p><span class="text-success glyphicon glyphicon-ok"></span> - <span class="text-success">SSL Compression disabled</span></p>';
+    } else {
+      echo '<p><span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">SSL Compression enabled</span> ';
 
-    echo "<a href='https://isecpartners.com/blog/2012/september/details-on-the-crime-attack.aspx' data-toggle='tooltip' data-placement='top' title='SSL Compression makes you vulnerable to the CRIME attack. Click the question mark for more info about it.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
-  }
-  echo "</td>";
-  echo "</tr>";
-  //ciphersuites
-  if ($_GET['ciphersuites'] == 1) {
+      echo "<a href='https://isecpartners.com/blog/2012/september/details-on-the-crime-attack.aspx' data-toggle='tooltip' data-placement='top' title='SSL Compression makes you vulnerable to the CRIME attack. Click the question mark for more info about it.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a></p>";
+    }
+    echo "</td>";
+    echo "</tr>";
+    //ciphersuites
     echo "<tr>";
     echo "<td>Ciphersuites supported by server</td>";
     echo "<td>";
@@ -477,122 +477,113 @@ function ssl_conn_metadata($data) {
     }
     echo "</td>";
     echo "</tr>";
-  } else {
-    echo "<tr>";
-    echo "<td>Ciphersuite Used</td>";
-    echo "<td>";
-    echo htmlspecialchars($data['used_ciphersuite']['name']);
-    echo " (".htmlspecialchars($data['used_ciphersuite']['bits'])." bits)";
-    echo "</td>";
-    echo "</tr>";
-  }
-  //tls fallback scsv
-  echo "<tr>";
-  echo "<td>";
-  echo "TLS_FALLBACK_SCSV";
-  echo "</td>";
-  echo "<td>";
-
-  if ($data["tls_fallback_scsv"] == "supported") {
-    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported. </span>";
-  } elseif ($data["tls_fallback_scsv"] == "unsupported") {
-    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported. </span>";
-  } else {
-    echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required. ";
-  }
-  echo "<a href='http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html' data-toggle='tooltip' data-placement='top' title='TLS_FALLBACK_SCSV provides protocol downgrade protection. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
-  echo "</td>";
-  echo "</tr>";
-
-  //heartbleed
-  if ($data['heartbleed'] != 'python2error') {
+    //tls fallback scsv
     echo "<tr>";
     echo "<td>";
-    echo "Heartbleed";
+    echo "TLS_FALLBACK_SCSV";
     echo "</td>";
     echo "<td>";
 
-    if ($data["heartbleed"] == "not_vulnerable") {
-      echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Not vulnerable. </span>";
-    } elseif ($data["heartbleed"] == "vulnerable") {
-      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Vulnerable. </span>";
-    } 
-    echo "<a href='http://heartbleed.com/' data-toggle='tooltip' data-placement='top' title='Heartbleed is a serious vulnerability exposing server memory and thus private data to an attacker. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
+    if ($data["tls_fallback_scsv"] == "supported") {
+      echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>TLS_FALLBACK_SCSV supported. </span>";
+    } elseif ($data["tls_fallback_scsv"] == "unsupported") {
+      echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>TLS_FALLBACK_SCSV not supported. </span>";
+    } else {
+      echo "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required. ";
+    }
+    echo "<a href='http://googleonlinesecurity.blogspot.nl/2014/10/this-poodle-bites-exploiting-ssl-30.html' data-toggle='tooltip' data-placement='top' title='TLS_FALLBACK_SCSV provides protocol downgrade protection. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
     echo "</td>";
     echo "</tr>";
-  }
 
-  echo "<tr>";
-  echo "<td>";
-  echo "Heartbeat Extension";
-  echo "</td>";
-  echo "<td>";
+    //heartbleed
+    if ($data['heartbleed'] != 'python2error') {
+      echo "<tr>";
+      echo "<td>";
+      echo "Heartbleed";
+      echo "</td>";
+      echo "<td>";
 
-  if ($data["heartbeat"] == "1") {
-    echo "Extension enabled.";
-  } else {
-    echo "Extenstion not enabled.";
-  } 
-  echo "</td>";
-  echo "</tr>";
-
-  // headers
-  echo "<tr>";
-  echo "<td>";
-  echo "<a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html'>Strict Transport Security</a>";
-  echo "</td>";
-  echo "<td>";
-  // hsts
-  if ( $data["strict_transport_security"] == "not set" ) {
-    echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
-  } else {
-    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
-    echo htmlspecialchars($data["strict_transport_security"]);
-    echo "</span>";
-  }
-  echo " <a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html' data-toggle='tooltip' data-placement='top' title='Strict Transport Security lets visitors know that your website should only be visitid via HTTPS. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
-  echo "</td>";
-  echo "</tr>";
-  echo "<tr>";
-  echo "<td>";
-  echo "<a href='https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html'>HTTP Public Key Pinning Extension (HPKP)</a>";
-  echo "</td>";
-  echo "<td>";
-  //hpkp
-  if ( $data["public_key_pins"] == "not set" ) {
-    echo '<span>Not Set</span>';
-  } else {
-    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
-    echo htmlspecialchars($data["public_key_pins"]);
-  }
-  if ( $data["public_key-pins_report_only"] ) {
-    echo "<b>Report Only</b>: ";
-    echo htmlspecialchars($data["public_key_pins_report_only"]);
-  }
-
-  echo "</td>";
-  echo "</tr>";
-  // ocsp stapling
-  echo "<tr>";
-  echo "<td>OCSP Stapling</td>";
-  echo "<td>";
-  if (isset($data["ocsp_stapling"]["working"])) {
-    if($data["ocsp_stapling"]["working"] == 1) {
-      echo "<table class='table'>";
-      foreach ($data["ocsp_stapling"] as $key => $value) {
-        if ($key != "working") {
-          echo "<tr><td>" . htmlspecialchars(ucfirst(str_replace('_', ' ', $key))) . "</td><td>" . htmlspecialchars($value) . "</td></tr>";
-        }
+      if ($data["heartbleed"] == "not_vulnerable") {
+        echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Not vulnerable. </span>";
+      } elseif ($data["heartbleed"] == "vulnerable") {
+        echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>Vulnerable. </span>";
       } 
-      echo "</table>";
+      echo "<a href='http://heartbleed.com/' data-toggle='tooltip' data-placement='top' title='Heartbleed is a serious vulnerability exposing server memory and thus private data to an attacker. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
+      echo "</td>";
+      echo "</tr>";
+    }
+
+    echo "<tr>";
+    echo "<td>";
+    echo "Heartbeat Extension";
+    echo "</td>";
+    echo "<td>";
+
+    if ($data["heartbeat"] == "1") {
+      echo "Extension enabled.";
+    } else {
+      echo "Extenstion not enabled.";
+    } 
+    echo "</td>";
+    echo "</tr>";
+
+    // headers
+    echo "<tr>";
+    echo "<td>";
+    echo "<a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html'>Strict Transport Security</a>";
+    echo "</td>";
+    echo "<td>";
+    // hsts
+    if ( $data["strict_transport_security"] == "not set" ) {
+      echo '<span class="text-danger glyphicon glyphicon-remove"></span> - <span class="text-danger">Not Set</span>';
+    } else {
+      echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
+      echo htmlspecialchars($data["strict_transport_security"]);
+      echo "</span>";
+    }
+    echo " <a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html' data-toggle='tooltip' data-placement='top' title='Strict Transport Security lets visitors know that your website should only be visitid via HTTPS. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "<a href='https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html'>HTTP Public Key Pinning Extension (HPKP)</a>";
+    echo "</td>";
+    echo "<td>";
+    //hpkp
+    if ( $data["public_key_pins"] == "not set" ) {
+      echo '<span>Not Set</span>';
+    } else {
+      echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>";
+      echo htmlspecialchars($data["public_key_pins"]);
+    }
+    if ( $data["public_key-pins_report_only"] ) {
+      echo "<b>Report Only</b>: ";
+      echo htmlspecialchars($data["public_key_pins_report_only"]);
+    }
+
+    echo "</td>";
+    echo "</tr>";
+    // ocsp stapling
+    echo "<tr>";
+    echo "<td>OCSP Stapling</td>";
+    echo "<td>";
+    if (isset($data["ocsp_stapling"]["working"])) {
+      if($data["ocsp_stapling"]["working"] == 1) {
+        echo "<table class='table'>";
+        foreach ($data["ocsp_stapling"] as $key => $value) {
+          if ($key != "working") {
+            echo "<tr><td>" . htmlspecialchars(ucfirst(str_replace('_', ' ', $key))) . "</td><td>" . htmlspecialchars($value) . "</td></tr>";
+          }
+        } 
+        echo "</table>";
+      } else {
+        echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>No OCSP stapling response received.</span>";
+      }
     } else {
       echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>No OCSP stapling response received.</span>";
     }
-  } else {
-    echo "<span class='text-danger glyphicon glyphicon-remove'></span> - <span class='text-danger'>No OCSP stapling response received.</span>";
+    echo "</td>";
   }
-  echo "</td>";
-
   // openssl version
   echo "</tr>";
   echo "<tr>";
@@ -614,7 +605,7 @@ function ssl_conn_metadata($data) {
 
 
 
-function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=null) {
+function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=null,$fastcheck=0) {
   $result = array();
   global $random_blurp;
   global $current_folder;
@@ -689,238 +680,239 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
     }
     $result["port"] = $port;
 
-    //heartbleed
-    $result['heartbleed'] = test_heartbleed($ip, $port);
-    if ($result['heartbleed'] == "vulnerable") {
-      $result["warning"][] = 'Vulnerable to the Heartbleed bug. Please update your OpenSSL ASAP!';
-    }
-
-    // compression
-    $compression = conn_compression($host, $ip, $port);
-    if ($compression == false) { 
-      $result["compression"] = false;
-    } else {
-      if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
-        $result["warning"][] = 'SSL compression not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
-      } else {
-        $result["compression"] = true;
-        $result["warning"][] = 'SSL compression enabled. Please disable to prevent attacks like CRIME.';
+    if($fastcheck == 0) {
+      //heartbleed
+      $result['heartbleed'] = test_heartbleed($ip, $port);
+      if ($result['heartbleed'] == "vulnerable") {
+        $result["warning"][] = 'Vulnerable to the Heartbleed bug. Please update your OpenSSL ASAP!';
       }
-      
-    }
 
-    // protocols
-    $result["protocols"] = array_reverse(ssl_conn_protocols($host, $ip, $port));
-    foreach ($result["protocols"] as $key => $value) {
-      if ( $value == true ) {
-        if ( $key == "sslv2") {
-          $result["warning"][] = 'SSLv2 supported. Please disable ASAP and upgrade to a newer protocol like TLSv1.2.';
-        }
-        if ( $key == "sslv3") {
-          $result["warning"][] = 'SSLv3 supported. Please disable and upgrade to a newer protocol like TLSv1.2.';
-        }
-      } else {
-        if ( $key == "tlsv1.2") {
-          $result["warning"][] = 'TLSv1.2 unsupported. Please enable TLSv1.2.';
-        }
-      }
-    }
-
-    // ciphersuites
-    if ($_GET['ciphersuites'] == 1) {   
-      $ciphersuites_to_test = array('ECDHE-RSA-AES256-GCM-SHA384',
-        'ECDHE-ECDSA-AES256-GCM-SHA384',
-        'ECDHE-RSA-AES256-SHA384',
-        'ECDHE-ECDSA-AES256-SHA384',
-        'ECDHE-RSA-AES256-SHA',
-        'ECDHE-ECDSA-AES256-SHA',
-        'SRP-DSS-AES-256-CBC-SHA',
-        'SRP-RSA-AES-256-CBC-SHA',
-        'SRP-AES-256-CBC-SHA',
-        'DH-DSS-AES256-GCM-SHA384',
-        'DHE-DSS-AES256-GCM-SHA384',
-        'DH-RSA-AES256-GCM-SHA384',
-        'DHE-RSA-AES256-GCM-SHA384',
-        'DHE-RSA-AES256-SHA256',
-        'DHE-DSS-AES256-SHA256',
-        'DH-RSA-AES256-SHA256',
-        'DH-DSS-AES256-SHA256',
-        'DHE-RSA-AES256-SHA',
-        'DHE-DSS-AES256-SHA',
-        'DH-RSA-AES256-SHA',
-        'DH-DSS-AES256-SHA',
-        'DHE-RSA-CAMELLIA256-SHA',
-        'DHE-DSS-CAMELLIA256-SHA',
-        'DH-RSA-CAMELLIA256-SHA',
-        'DH-DSS-CAMELLIA256-SHA',
-        'ECDH-RSA-AES256-GCM-SHA384',
-        'ECDH-ECDSA-AES256-GCM-SHA384',
-        'ECDH-RSA-AES256-SHA384',
-        'ECDH-ECDSA-AES256-SHA384',
-        'ECDH-RSA-AES256-SHA',
-        'ECDH-ECDSA-AES256-SHA',
-        'AES256-GCM-SHA384',
-        'AES256-SHA256',
-        'AES256-SHA',
-        'CAMELLIA256-SHA',
-        'PSK-AES256-CBC-SHA',
-        'ECDHE-RSA-AES128-GCM-SHA256',
-        'ECDHE-ECDSA-AES128-GCM-SHA256',
-        'ECDHE-RSA-AES128-SHA256',
-        'ECDHE-ECDSA-AES128-SHA256',
-        'ECDHE-RSA-AES128-SHA',
-        'ECDHE-ECDSA-AES128-SHA',
-        'SRP-DSS-AES-128-CBC-SHA',
-        'SRP-RSA-AES-128-CBC-SHA',
-        'SRP-AES-128-CBC-SHA',
-        'DH-DSS-AES128-GCM-SHA256',
-        'DHE-DSS-AES128-GCM-SHA256',
-        'DH-RSA-AES128-GCM-SHA256',
-        'DHE-RSA-AES128-GCM-SHA256',
-        'DHE-RSA-AES128-SHA256',
-        'DHE-DSS-AES128-SHA256',
-        'DH-RSA-AES128-SHA256',
-        'DH-DSS-AES128-SHA256',
-        'DHE-RSA-AES128-SHA',
-        'DHE-DSS-AES128-SHA',
-        'DH-RSA-AES128-SHA',
-        'DH-DSS-AES128-SHA',
-        'DHE-RSA-SEED-SHA',
-        'DHE-DSS-SEED-SHA',
-        'DH-RSA-SEED-SHA',
-        'DH-DSS-SEED-SHA',
-        'DHE-RSA-CAMELLIA128-SHA',
-        'DHE-DSS-CAMELLIA128-SHA',
-        'DH-RSA-CAMELLIA128-SHA',
-        'DH-DSS-CAMELLIA128-SHA',
-        'ECDH-RSA-AES128-GCM-SHA256',
-        'ECDH-ECDSA-AES128-GCM-SHA256',
-        'ECDH-RSA-AES128-SHA256',
-        'ECDH-ECDSA-AES128-SHA256',
-        'ECDH-RSA-AES128-SHA',
-        'ECDH-ECDSA-AES128-SHA',
-        'AES128-GCM-SHA256',
-        'AES128-SHA256',
-        'AES128-SHA',
-        'SEED-SHA',
-        'CAMELLIA128-SHA',
-        'IDEA-CBC-SHA',
-        'PSK-AES128-CBC-SHA',
-        'ECDHE-RSA-RC4-SHA',
-        'ECDHE-ECDSA-RC4-SHA',
-        'ECDH-RSA-RC4-SHA',
-        'ECDH-ECDSA-RC4-SHA',
-        'RC4-SHA',
-        'RC4-MD5',
-        'PSK-RC4-SHA',
-        'ECDHE-RSA-DES-CBC3-SHA',
-        'ECDHE-ECDSA-DES-CBC3-SHA',
-        'SRP-DSS-3DES-EDE-CBC-SHA',
-        'SRP-RSA-3DES-EDE-CBC-SHA',
-        'SRP-3DES-EDE-CBC-SHA',
-        'EDH-RSA-DES-CBC3-SHA',
-        'EDH-DSS-DES-CBC3-SHA',
-        'DH-RSA-DES-CBC3-SHA',
-        'DH-DSS-DES-CBC3-SHA',
-        'ECDH-RSA-DES-CBC3-SHA',
-        'ECDH-ECDSA-DES-CBC3-SHA',
-        'DES-CBC3-SHA',
-        'PSK-3DES-EDE-CBC-SHA',
-        'EDH-RSA-DES-CBC-SHA',
-        'EDH-DSS-DES-CBC-SHA',
-        'DH-RSA-DES-CBC-SHA',
-        'DH-DSS-DES-CBC-SHA',
-        'DES-CBC-SHA',
-        'EXP-EDH-RSA-DES-CBC-SHA',
-        'EXP-EDH-DSS-DES-CBC-SHA',
-        'EXP-DH-RSA-DES-CBC-SHA',
-        'EXP-DH-DSS-DES-CBC-SHA',
-        'EXP-DES-CBC-SHA',
-        'EXP-RC2-CBC-MD5',
-        'EXP-RC4-MD5',
-        'ECDHE-RSA-NULL-SHA',
-        'ECDHE-ECDSA-NULL-SHA',
-        'AECDH-NULL-SHA',
-        'ECDH-RSA-NULL-SHA',
-        'ECDH-ECDSA-NULL-SHA',
-        'NULL-SHA256',
-        'NULL-SHA',
-        'NULL-MD5');
-      $tested_ciphersuites = ssl_conn_ciphersuites($host, $ip, $port, $ciphersuites_to_test);
-      $result["supported_ciphersuites"] = array();
-      foreach ($tested_ciphersuites as $key => $value) {
-        if ($value == true) {
-          $result["supported_ciphersuites"][] = $key;
-        }
-      }
-      
-    } else {
-      $result["used_ciphersuite"]["name"] = $context_meta['cipher_name'];
-      $result["used_ciphersuite"]["bits"] = $context_meta['cipher_bits'];
-    }
-    // tls_fallback_scsv
-    $fallback = tls_fallback_scsv($host, $ip, $port);
-    if ($fallback['protocol_count'] == 1) {
-      $result["tls_fallback_scsv"] = "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
-    } else {
-      if ($fallback['tls_fallback_scsv_support'] == 1) {
-        $result["tls_fallback_scsv"] = "supported";
+      // compression
+      $compression = conn_compression($host, $ip, $port);
+      if ($compression == false) { 
+        $result["compression"] = false;
       } else {
         if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
-        $result["warning"][] = 'TLS_FALLBACK_SCSV not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
+          // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+          $result["warning"][] = 'SSL compression not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
         } else {
-          $result["tls_fallback_scsv"] = "unsupported";
-          $result["warning"][] = "TLS_FALLBACK_SCSV unsupported. Please upgrade OpenSSL to enable. This offers downgrade attack protection.";
+          $result["compression"] = true;
+          $result["warning"][] = 'SSL compression enabled. Please disable to prevent attacks like CRIME.';
+        }
+        
+      }
+
+      // protocols
+      $result["protocols"] = array_reverse(ssl_conn_protocols($host, $ip, $port));
+      foreach ($result["protocols"] as $key => $value) {
+        if ( $value == true ) {
+          if ( $key == "sslv2") {
+            $result["warning"][] = 'SSLv2 supported. Please disable ASAP and upgrade to a newer protocol like TLSv1.2.';
+          }
+          if ( $key == "sslv3") {
+            $result["warning"][] = 'SSLv3 supported. Please disable and upgrade to a newer protocol like TLSv1.2.';
+          }
+        } else {
+          if ( $key == "tlsv1.2") {
+            $result["warning"][] = 'TLSv1.2 unsupported. Please enable TLSv1.2.';
+          }
         }
       }
-    }
-    //hsts
-    $headers = server_http_headers($host, $ip, $port);
-    if ($headers["strict-transport-security"]) {
-      if ( is_array($headers["strict-transport-security"])) {
-      $result["strict_sransport-security"] = substr($headers["strict-transport-security"][0], 0, 50);
-      } else {
-        $result["strict_transport_security"] = substr($headers["strict-transport-security"], 0, 50);
-      }
-    } else {
-      $result["strict_transport_security"] = 'not set';
-      $result["warning"][] = "HTTP Strict Transport Security not set.";
-    }
-    //hpkp
-    if ( $headers["public-key-pins"] ) {
-      if ( is_array($headers["public-key-pins"])) {
-        $result["public_key_pins"] = substr($headers["public-key-pins"][0], 0, 255);
-      } else {
-        $result["public_key_pins"] = substr($headers["public-key-pins"], 0, 255);
-      }
-    } else {
-      $result["public_key_pins"] = 'not set';
-    }
-    if ( $headers["public-key-pins-report-only"] ) {
-      if ( is_array($headers["public-key-pins-report-only"])) {
-        $result["public_key_pins_report_only"] = substr($headers["public-key-pins-report-only"][0], 0, 255);
-      } else {
-        $result["public_key_pins_report_only"] = substr($headers["public-key-pins-report-only"], 0, 255);
-      }
-    } 
-    // ocsp stapling
-    $stapling = ocsp_stapling($host, $ip, $port);
-    if($stapling["working"] == 1) {
-      $result["ocsp_stapling"] = $stapling;
-    } else {
-      if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
-        $result["warning"][] = 'OCSP Stapling not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
-      } else {
-        $result["ocsp_stapling"] = "not set";
-        $result["warning"][] = "OCSP Stapling not enabled.";
-      }
-    }
-    
-    $result["heartbeat"] = heartbeat_test($host, $port);
 
+      // ciphersuites
+      if ($_GET['ciphersuites'] == 1) {   
+        $ciphersuites_to_test = array('ECDHE-RSA-AES256-GCM-SHA384',
+          'ECDHE-ECDSA-AES256-GCM-SHA384',
+          'ECDHE-RSA-AES256-SHA384',
+          'ECDHE-ECDSA-AES256-SHA384',
+          'ECDHE-RSA-AES256-SHA',
+          'ECDHE-ECDSA-AES256-SHA',
+          'SRP-DSS-AES-256-CBC-SHA',
+          'SRP-RSA-AES-256-CBC-SHA',
+          'SRP-AES-256-CBC-SHA',
+          'DH-DSS-AES256-GCM-SHA384',
+          'DHE-DSS-AES256-GCM-SHA384',
+          'DH-RSA-AES256-GCM-SHA384',
+          'DHE-RSA-AES256-GCM-SHA384',
+          'DHE-RSA-AES256-SHA256',
+          'DHE-DSS-AES256-SHA256',
+          'DH-RSA-AES256-SHA256',
+          'DH-DSS-AES256-SHA256',
+          'DHE-RSA-AES256-SHA',
+          'DHE-DSS-AES256-SHA',
+          'DH-RSA-AES256-SHA',
+          'DH-DSS-AES256-SHA',
+          'DHE-RSA-CAMELLIA256-SHA',
+          'DHE-DSS-CAMELLIA256-SHA',
+          'DH-RSA-CAMELLIA256-SHA',
+          'DH-DSS-CAMELLIA256-SHA',
+          'ECDH-RSA-AES256-GCM-SHA384',
+          'ECDH-ECDSA-AES256-GCM-SHA384',
+          'ECDH-RSA-AES256-SHA384',
+          'ECDH-ECDSA-AES256-SHA384',
+          'ECDH-RSA-AES256-SHA',
+          'ECDH-ECDSA-AES256-SHA',
+          'AES256-GCM-SHA384',
+          'AES256-SHA256',
+          'AES256-SHA',
+          'CAMELLIA256-SHA',
+          'PSK-AES256-CBC-SHA',
+          'ECDHE-RSA-AES128-GCM-SHA256',
+          'ECDHE-ECDSA-AES128-GCM-SHA256',
+          'ECDHE-RSA-AES128-SHA256',
+          'ECDHE-ECDSA-AES128-SHA256',
+          'ECDHE-RSA-AES128-SHA',
+          'ECDHE-ECDSA-AES128-SHA',
+          'SRP-DSS-AES-128-CBC-SHA',
+          'SRP-RSA-AES-128-CBC-SHA',
+          'SRP-AES-128-CBC-SHA',
+          'DH-DSS-AES128-GCM-SHA256',
+          'DHE-DSS-AES128-GCM-SHA256',
+          'DH-RSA-AES128-GCM-SHA256',
+          'DHE-RSA-AES128-GCM-SHA256',
+          'DHE-RSA-AES128-SHA256',
+          'DHE-DSS-AES128-SHA256',
+          'DH-RSA-AES128-SHA256',
+          'DH-DSS-AES128-SHA256',
+          'DHE-RSA-AES128-SHA',
+          'DHE-DSS-AES128-SHA',
+          'DH-RSA-AES128-SHA',
+          'DH-DSS-AES128-SHA',
+          'DHE-RSA-SEED-SHA',
+          'DHE-DSS-SEED-SHA',
+          'DH-RSA-SEED-SHA',
+          'DH-DSS-SEED-SHA',
+          'DHE-RSA-CAMELLIA128-SHA',
+          'DHE-DSS-CAMELLIA128-SHA',
+          'DH-RSA-CAMELLIA128-SHA',
+          'DH-DSS-CAMELLIA128-SHA',
+          'ECDH-RSA-AES128-GCM-SHA256',
+          'ECDH-ECDSA-AES128-GCM-SHA256',
+          'ECDH-RSA-AES128-SHA256',
+          'ECDH-ECDSA-AES128-SHA256',
+          'ECDH-RSA-AES128-SHA',
+          'ECDH-ECDSA-AES128-SHA',
+          'AES128-GCM-SHA256',
+          'AES128-SHA256',
+          'AES128-SHA',
+          'SEED-SHA',
+          'CAMELLIA128-SHA',
+          'IDEA-CBC-SHA',
+          'PSK-AES128-CBC-SHA',
+          'ECDHE-RSA-RC4-SHA',
+          'ECDHE-ECDSA-RC4-SHA',
+          'ECDH-RSA-RC4-SHA',
+          'ECDH-ECDSA-RC4-SHA',
+          'RC4-SHA',
+          'RC4-MD5',
+          'PSK-RC4-SHA',
+          'ECDHE-RSA-DES-CBC3-SHA',
+          'ECDHE-ECDSA-DES-CBC3-SHA',
+          'SRP-DSS-3DES-EDE-CBC-SHA',
+          'SRP-RSA-3DES-EDE-CBC-SHA',
+          'SRP-3DES-EDE-CBC-SHA',
+          'EDH-RSA-DES-CBC3-SHA',
+          'EDH-DSS-DES-CBC3-SHA',
+          'DH-RSA-DES-CBC3-SHA',
+          'DH-DSS-DES-CBC3-SHA',
+          'ECDH-RSA-DES-CBC3-SHA',
+          'ECDH-ECDSA-DES-CBC3-SHA',
+          'DES-CBC3-SHA',
+          'PSK-3DES-EDE-CBC-SHA',
+          'EDH-RSA-DES-CBC-SHA',
+          'EDH-DSS-DES-CBC-SHA',
+          'DH-RSA-DES-CBC-SHA',
+          'DH-DSS-DES-CBC-SHA',
+          'DES-CBC-SHA',
+          'EXP-EDH-RSA-DES-CBC-SHA',
+          'EXP-EDH-DSS-DES-CBC-SHA',
+          'EXP-DH-RSA-DES-CBC-SHA',
+          'EXP-DH-DSS-DES-CBC-SHA',
+          'EXP-DES-CBC-SHA',
+          'EXP-RC2-CBC-MD5',
+          'EXP-RC4-MD5',
+          'ECDHE-RSA-NULL-SHA',
+          'ECDHE-ECDSA-NULL-SHA',
+          'AECDH-NULL-SHA',
+          'ECDH-RSA-NULL-SHA',
+          'ECDH-ECDSA-NULL-SHA',
+          'NULL-SHA256',
+          'NULL-SHA',
+          'NULL-MD5');
+        $tested_ciphersuites = ssl_conn_ciphersuites($host, $ip, $port, $ciphersuites_to_test);
+        $result["supported_ciphersuites"] = array();
+        foreach ($tested_ciphersuites as $key => $value) {
+          if ($value == true) {
+            $result["supported_ciphersuites"][] = $key;
+          }
+        }
+        
+      } else {
+        $result["used_ciphersuite"]["name"] = $context_meta['cipher_name'];
+        $result["used_ciphersuite"]["bits"] = $context_meta['cipher_bits'];
+      }
+      // tls_fallback_scsv
+      $fallback = tls_fallback_scsv($host, $ip, $port);
+      if ($fallback['protocol_count'] == 1) {
+        $result["tls_fallback_scsv"] = "Only 1 protocol enabled, fallback not possible, TLS_FALLBACK_SCSV not required.";
+      } else {
+        if ($fallback['tls_fallback_scsv_support'] == 1) {
+          $result["tls_fallback_scsv"] = "supported";
+        } else {
+          if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+          // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+          $result["warning"][] = 'TLS_FALLBACK_SCSV not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
+          } else {
+            $result["tls_fallback_scsv"] = "unsupported";
+            $result["warning"][] = "TLS_FALLBACK_SCSV unsupported. Please upgrade OpenSSL to enable. This offers downgrade attack protection.";
+          }
+        }
+      }
+      //hsts
+      $headers = server_http_headers($host, $ip, $port);
+      if ($headers["strict-transport-security"]) {
+        if ( is_array($headers["strict-transport-security"])) {
+        $result["strict_sransport-security"] = substr($headers["strict-transport-security"][0], 0, 50);
+        } else {
+          $result["strict_transport_security"] = substr($headers["strict-transport-security"], 0, 50);
+        }
+      } else {
+        $result["strict_transport_security"] = 'not set';
+        $result["warning"][] = "HTTP Strict Transport Security not set.";
+      }
+      //hpkp
+      if ( $headers["public-key-pins"] ) {
+        if ( is_array($headers["public-key-pins"])) {
+          $result["public_key_pins"] = substr($headers["public-key-pins"][0], 0, 255);
+        } else {
+          $result["public_key_pins"] = substr($headers["public-key-pins"], 0, 255);
+        }
+      } else {
+        $result["public_key_pins"] = 'not set';
+      }
+      if ( $headers["public-key-pins-report-only"] ) {
+        if ( is_array($headers["public-key-pins-report-only"])) {
+          $result["public_key_pins_report_only"] = substr($headers["public-key-pins-report-only"][0], 0, 255);
+        } else {
+          $result["public_key_pins_report_only"] = substr($headers["public-key-pins-report-only"], 0, 255);
+        }
+      } 
+      // ocsp stapling
+      $stapling = ocsp_stapling($host, $ip, $port);
+      if($stapling["working"] == 1) {
+        $result["ocsp_stapling"] = $stapling;
+      } else {
+        if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+          // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+          $result["warning"][] = 'OCSP Stapling not tested because of <a href="https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest">bugs</a> in the OpenSSL tools and IPv6.';
+        } else {
+          $result["ocsp_stapling"] = "not set";
+          $result["warning"][] = "OCSP Stapling not enabled.";
+        }
+      }
+      
+      $result["heartbeat"] = heartbeat_test($host, $port);
+    }
     $result["openssl_version"] = shell_exec("openssl version");
     $result["datetime_rfc2822"] = shell_exec("date --rfc-2822");
   } 

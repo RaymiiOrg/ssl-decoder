@@ -20,12 +20,13 @@ if ( isset($_GET['host']) && !empty($_GET['host'])) {
   if ( !is_numeric($port) ) {
     $port = 443;
   }
+  $fastcheck = $_GET['fastcheck'];
   $write_cache = 1;
   $hostfilename = preg_replace("([^\w\s\d\-_~,;:\[\]\(\).])", '', $host);
   $hostfilename = preg_replace("([\.]{2,})", '', $host);
   $hostfilename = preg_replace("([^a-z0-9])", '', $host);
   $cache_filename = (string) "results/saved." . $hostfilename . "." . $epoch . "." . $random_bla . ".api.json";
-  $data["data"] = check_json($host, $ip, $port);
+  $data["data"] = check_json($host, $ip, $port, $fastcheck);
 } elseif(isset($_GET['csr']) && !empty($_GET['csr'])) {
   $write_cache = 1;
   $cache_filename = (string) "results/saved.csr." . $epoch . "." . $random_bla . ".api.json";

@@ -13,6 +13,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+var _targetdiv = null;
+function showdiv(id) {
+    if(_targetdiv)
+        _targetdiv.style.display = 'none';
+    _targetdiv = document.getElementById(id);
+    _targetdiv.style.display = 'block';
+}
+
+function hidediv(id) {
+    if(_targetdiv)
+        _targetdiv.style.display = 'block';
+    _targetdiv = document.getElementById(id);
+    _targetdiv.style.display = 'none';
+}
+
 var request = createRequestObject();
 var dataReturn='';
 var ajaxTimeout='';

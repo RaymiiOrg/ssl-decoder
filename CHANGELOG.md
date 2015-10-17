@@ -1,10 +1,16 @@
 # Changelog
 
+## 2.9
+
+- Add certificate hashes (MD5, SHA1, SHA256, SHA384, SHA512).
+- Add TLSA validation check.
+- Add "fast check" option which disables connection data, dns and certificate transparancy submission to speed up the result (less remote requests).
+- Add loading cog to multiple endpoint chooser.
+
 ## 2.8
 
 - Add Certificate Transparency Submission
 - Small formatting changes
-
 
 ## 2.7
 

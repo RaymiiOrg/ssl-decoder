@@ -17,10 +17,13 @@
 # timeout in seconds
 $timeout = 2;
 
+# max chain length (big chain slows down checks)
+$max_chain_length = 10;
+
 # Don't change stuff down here.
 date_default_timezone_set('UTC');
 
-$version = 2.8;
+$version = 2.9;
 
 ini_set('default_socket_timeout', 2);
 
@@ -39,9 +42,6 @@ $ct_urls = ["https://ct.ws.symantec.com",
 # 2014-11-10 (nov) from wikipedia
 $ev_oids = array("1.3.6.1.4.1.34697.2.1", "1.3.6.1.4.1.34697.2.2", "1.3.6.1.4.1.34697.2.3", "1.3.6.1.4.1.34697.2.4", "1.2.40.0.17.1.22", "2.16.578.1.26.1.3.3", "1.3.6.1.4.1.17326.10.14.2.1.2", "1.3.6.1.4.1.17326.10.8.12.1.2", "1.3.6.1.4.1.6449.1.2.1.5.1", "2.16.840.1.114412.2.1", "2.16.840.1.114412.1.3.0.2", "2.16.528.1.1001.1.1.1.12.6.1.1.1", "2.16.840.1.114028.10.1.2", "0.4.0.2042.1.4", "0.4.0.2042.1.5", "1.3.6.1.4.1.13177.10.1.3.10", "1.3.6.1.4.1.14370.1.6", "1.3.6.1.4.1.4146.1.1", "2.16.840.1.114413.1.7.23.3", "1.3.6.1.4.1.14777.6.1.1", "2.16.792.1.2.1.1.5.7.1.9", "1.3.6.1.4.1.22234.2.5.2.3.1", "1.3.6.1.4.1.782.1.2.1.8.1", "1.3.6.1.4.1.8024.0.2.100.1.2", "1.2.392.200091.100.721.1", "2.16.840.1.114414.1.7.23.3", "1.3.6.1.4.1.23223.2", "1.3.6.1.4.1.23223.1.1.1", "2.16.756.1.83.21.0", "2.16.756.1.89.1.2.1.1", "2.16.840.1.113733.1.7.48.1", "2.16.840.1.114404.1.1.2.4.1", "2.16.840.1.113733.1.7.23.6", "1.3.6.1.4.1.6334.1.100.1", "2.16.840.1.114171.500.9", "1.3.6.1.4.1.36305.2");
 
-
-
-$current_folder = get_current_folder();
 
 function parse_hostname($u_hostname){
     # format raymii.org:1.2.34.56 should do SNI request to that ip.
@@ -86,7 +86,7 @@ function parse_hostname($u_hostname){
     return $result;
 }
 
-function choose_endpoint($ips, $host, $port, $ciphersuites) {
+function choose_endpoint($ips, $host, $port, $fastcheck) {
     global $version;
     echo "<div id='page-content-wrapper'>\n";
     echo "<div class='container-fluid'>\n";
@@ -110,13 +110,13 @@ function choose_endpoint($ips, $host, $port, $ciphersuites) {
     echo "</p>\n";
     echo "</div>\n";
     echo "<div id='resultDiv'></div>\n";
-    echo "<div class='content'>\n<section id='choose_endpoint'>\n";
+    echo "<div class='content' id='choose_endp'>\n<section id='choose_endpoint'>\n";
     echo "<header>\n<h2>Multiple endpoints for " . htmlspecialchars($host) . "</h2>\n</header>\n";
     echo "<p>We've found multiple results for " . htmlspecialchars($host) . ". Please choose the host you want to scan from the list below:</p>\n<br>\n";
     echo "<ul>\n";
     foreach ($ips as $ip) {
         echo "<li>";
-        echo "<a href=\"";
+        echo "<a onclick=\"showdiv('preloader'); hidediv('choose_endp');\" href=\"";
         echo htmlspecialchars($current_folder);
         echo "?host=";
         echo htmlspecialchars($host);
@@ -130,11 +130,11 @@ function choose_endpoint($ips, $host, $port, $ciphersuites) {
         }
         echo "&port=";
         echo htmlspecialchars($port);
-        echo "&ciphersuites=";
-        if ($ciphersuites == 1) {
-            echo "1";
+        echo "&fastcheck=";
+        if ($fastcheck == 1) {
+            echo 1;
         } else {
-            echo "0";
+            echo 0;
         }
         echo "\">";
         if ($ip['type'] == 'A') {

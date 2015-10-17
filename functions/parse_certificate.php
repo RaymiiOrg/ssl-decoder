@@ -537,6 +537,121 @@ function cert_parse($data) {
   echo $data["key"]["signature_algorithm"];
   echo "</td>";
   echo "</tr>";
+
+  echo "<tr>";
+  echo "<td>Hashes</td>";
+  echo "<td>";
+    echo "<table class='table table-striped'>";
+    foreach ($data["hash"] as $key => $value) {
+      echo "<tr><td>";
+      echo htmlspecialchars(strtoupper($key));
+      echo "</td><td><span style='font-family:monospace;'>";
+      echo wordwrap(htmlspecialchars($value), 64, "<br>\n", TRUE);
+      echo "</span></td></tr>";
+    }
+  echo "</table>";
+  echo "</td>";
+  echo "</tr>";
+
+  if ($_GET['fastcheck'] == 0) {
+    echo "<tr>";
+    echo "<td>TLSA DNS </td>";
+    echo "<td>";
+    if($data['tlsa']['error'] == 'none' && isset($data['tlsa'])) {
+      echo "<table class='table table-striped'>";
+      foreach ($data["tlsa"] as $key => $value) {
+        switch ($key) {
+          case 'tlsa_hash':
+            echo "<tr><td>Record Data</td><td>" . htmlspecialchars($value) . "</td></tr>";
+            break;
+          case 'tlsa_usage':
+            echo "<tr><td>Usage</td><td>";
+            switch ($value) {
+              case '0':
+                echo "0: PKIX-TA: Certificate Authority Constraint";
+                break;
+              case '1':
+                echo "1: PKIX-EE: Service Certificate Constraint";
+                break;
+              case '2':
+                echo "2: DANE-TA: Trust Anchor Assertion";
+                break;
+              case '3':
+                echo "3: DANE-EE: Domain Issued Certificate";
+                break;
+              default:
+                echo "<span class='text-danger glyphicon glyphicon-remove'></span><span class='text-danger'> - Incorrect usage parameter: ". htmlspecialchars($value) . "</span>";
+                break;
+            }
+            break;
+          case 'tlsa_selector':
+            echo "<tr><td>Selector</td><td>";
+            switch ($value) {
+              case '0':
+                echo "0: Cert: Use full certificate";
+                break;
+              case '1':
+                echo "1: SPKI: Use subject public key";
+                break;
+              default:
+                echo "<span class='text-danger glyphicon glyphicon-remove'></span><span class='text-danger'> - Incorrect selector parameter: ". htmlspecialchars($value) . "</span>";
+                break;
+            }
+            break;
+          case 'tlsa_matching_type':
+            echo "<tr><td>Matching Type</td><td>";
+            switch ($value) {
+              case '0':
+                echo "0: Full: No Hash";
+                break;
+              case '1':
+                echo "1: SHA-256 hash";
+                break;
+              case '2':
+                echo "2: SHA-512 hash";
+                break;
+              default:
+                echo "<span class='text-danger glyphicon glyphicon-remove'></span><span class='text-danger'> - Incorrect matching type parameter: ". htmlspecialchars($value) . "</span>";
+                break;
+            }
+            break;      
+          }
+      echo "</td></tr>";
+      }
+      if ($data['tlsa']['tlsa_matching_type'] == "1" || $data['tlsa']['tlsa_matching_type'] == 2) {
+        echo "<tr><td>DNS Hash Matches Certificate Hash</td><td>";
+        if($data['tlsa']['tlsa_matching_type'] == '1') {
+          echo "SHA 256 ";
+          if ($data['tlsa']['tlsa_hash'] == $data['hash']['sha256']) {
+            echo "<span class='text-success glyphicon glyphicon-ok'></span><span class='text-success'> - Hash match</span>";
+          } else {
+            echo "<span class='text-danger glyphicon glyphicon-remove'></span><span class='text-danger'> - Hash does not match</span>";
+          }
+        }
+        if($data['tlsa']['tlsa_matching_type'] == '2') {
+          echo "SHA 512 ";
+          if ($data['tlsa']['tlsa_hash'] == $data['hash']['sha512']) {
+            echo "<span class='text-success glyphicon glyphicon-ok'></span><span class='text-success'> Hash match</span>";
+          } else {
+            echo "<span class='text-danger glyphicon glyphicon-remove'></span><span class='text-danger'> - Hash does not match</span>";
+          }
+        }
+      }
+      echo "</table>";
+    } else {
+      echo "<p>";
+      echo htmlspecialchars($data['tlsa']['error']);
+      if($data['tlsa']['example']) {
+        echo "Here's an example TLSA record based on this certificate's SHA-256 hash: <br><pre>";
+        echo htmlspecialchars($data['tlsa']['example']);
+        echo "</pre></p>";
+      }
+    }
+    echo "<p>Please note that the DNSSEC chain is not validated. The status of the DNSSEC signature will not show up here.<br><a href='https://wiki.mozilla.org/Security/DNSSEC-TLS-details'>More information about TLSA and DNSSEC.</a> - Simple TLSA record generator <a href='https://www.huque.com/bin/gen_tlsa'>here</a>.";
+    echo "</td>";
+    echo "</tr>";
+  }
+  
   if (count($data['cert_data']['extensions']) >= 1) {
     echo "<tr>";
     echo "<td>Extensions</td>";
@@ -699,9 +814,10 @@ function csr_parse_json($csr) {
   return $result;
 }
 
-function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $validate_hostname=false) {
+function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $validate_hostname=false, $port="443") {
   global $random_blurp;
   global $ev_oids;
+  global $timeout;
   $result = array();
   $cert_data = openssl_x509_parse($raw_cert_data);
   if (isset($raw_next_cert_data)) {
@@ -836,40 +952,79 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
   // key details
   $key_details = openssl_pkey_get_details(openssl_pkey_get_public($raw_cert_data));
   $export_pem = "";
-
   openssl_x509_export($raw_cert_data, $export_pem);
+  //hashes
+  $string = $export_pem;
+  $pattern = '/-----(.*)-----/';
+  $replacement = '';
+  $string = preg_replace($pattern, $replacement, $string);
+
+  $pattern = '/\n/';
+  $replacement = '';
+  $export_pem_preg = preg_replace($pattern, $replacement, $string);
+  $export_pem_preg = wordwrap($export_pem_preg, 77, "\n", TRUE);
+  //pre_dump("export preg: " . $export_pem_preg);
+  //pre_dump("end");
+  $result['hash']['md5'] = cert_hash('md5',       $export_pem_preg);
+  $result['hash']['sha1'] = cert_hash('sha1',     $export_pem_preg);
+  $result['hash']['sha256'] = cert_hash('sha256', $export_pem_preg);
+  $result['hash']['sha384'] = cert_hash('sha384', $export_pem_preg);
+  $result['hash']['sha512'] = cert_hash('sha512', $export_pem_preg);
+  
+  //TLSA check
+  if (isset($cert_data['subject']['CN']) && isset($host)) {
+    if ($validate_hostname == true) {
+      $tlsa_record = shell_exec("timeout " . $timeout . " dig +short +dnssec +time=" . $timeout . " TLSA _" . escapeshellcmd($port) . "._tcp." . escapeshellcmd($host) . " 2>&1 | head -n 1");
+      if (!empty($tlsa_record)) {
+        $tlsa = explode(" ", $tlsa_record, 4);
+        $pattern = '/ /';
+        $replacement = '';
+        $result['tlsa']['tlsa_hash'] = trim(strtolower(preg_replace($pattern, $replacement, $tlsa[3])));
+        $result['tlsa']['tlsa_usage'] = $tlsa[0];
+        $result['tlsa']['tlsa_selector'] = $tlsa[1];
+        $result['tlsa']['tlsa_matching_type'] = $tlsa[2];
+        $result['tlsa']['error'] = 'none';
+      } else {
+
+        $result['tlsa']['error'] = 'No TLSA record found.';
+        $result['tlsa']['example'] = '_'. htmlspecialchars($port) . '._tcp.' . htmlspecialchars($host) . ' IN TLSA 3 0 1 ' . $result['hash']['sha256'] . ';';
+      }
+    } else {
+      $result['tlsa']['error'] = 'CA certificate, TLSA not applicable.';
+    }
+  }
   if (isset($key_details['rsa'])) {
     $result["key"]["type"] = "rsa";
     $result["key"]["bits"] = $key_details['bits'];
     if ($key_details['bits'] < 2048) {
       $result['warning'][] = $key_details['bits'] . " bit RSA key is not safe. Upgrade to at least 4096 bits.";
     }
-    // weak debian key check
-    $bin_modulus = $key_details['rsa']['n'];
-    # blacklist format requires sha1sum of output from "openssl x509 -noout -modulus" including the Modulus= and newline.
-    # create the blacklist:
-    # https://packages.debian.org/source/squeeze/openssl-blacklist
-    # svn co svn://svn.debian.org/pkg-openssl/openssl-blacklist/
-    # find openssl-blacklist/trunk/blacklists/ -iname "*.db" -exec cat {} >> unsorted_blacklist.db \;
-    # sort -u unsorted_blacklist.db > debian_blacklist.db
+  
+  // weak debian key check
+  $bin_modulus = $key_details['rsa']['n'];
+  # blacklist format requires sha1sum of output from "openssl x509 -noout -modulus" including the Modulus= and newline.
+  # create the blacklist:
+  # https://packages.debian.org/source/squeeze/openssl-blacklist
+  # svn co svn://svn.debian.org/pkg-openssl/openssl-blacklist/
+  # find openssl-blacklist/trunk/blacklists/ -iname "*.db" -exec cat {} >> unsorted_blacklist.db \;
+  # sort -u unsorted_blacklist.db > debian_blacklist.db
 
-    $mod_sha1sum = sha1("Modulus=" . strtoupper(bin2hex($bin_modulus)) . "\n");
-    #pre_dump($mod_sha1sum);
-    $blacklist_file = fopen('inc/debian_blacklist.db', 'r');
-    $key_in_blacklist = false;
-    while (($buffer = fgets($blacklist_file)) !== false) {
-        if (strpos($buffer, $mod_sha1sum) !== false) {
-            $key_in_blacklist = true;
-            break; 
-        }      
+  $mod_sha1sum = sha1("Modulus=" . strtoupper(bin2hex($bin_modulus)) . "\n");
+  $blacklist_file = fopen('inc/debian_blacklist.db', 'r');
+  $key_in_blacklist = false;
+  while (($buffer = fgets($blacklist_file)) !== false) {
+      if (strpos($buffer, $mod_sha1sum) !== false) {
+          $key_in_blacklist = true;
+          break; 
+      }      
     }
     fclose($blacklist_file);
     if ($key_in_blacklist == true) {
       $result["key"]["weak_debian_rsa_key"] = "true";
-      $result['warning'][] = "Weak Debian key found. Remove this key right now and create a new one.";
+      $result['warning'][] = "Weak debian key found. Remove this key right now and create a new one.";
     }
   } else if (isset($key_details['dsa'])) {
-    $result["key"]["type"] = "dsa";
+  $result["key"]["type"] = "dsa";
     $result["key"]["bits"] = $key_details['bits'];
   } else if (isset($key_details['dh'])) {
     $result["key"]["type"] = "dh";
