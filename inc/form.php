@@ -23,7 +23,7 @@
                 <div class="col-md-4 col-md-offset-1">
                   <div class="checkbox">
                     <label for="fastcheck">
-                      <input type="checkbox" name="fastcheck" id="fastcheck" value="yes">
+                      <input type="checkbox" name="fastcheck" id="fastcheck" value="1">
                       Fast check (no connection details, no TLSA check, no certificate transparancy submission)
                     </label>
                   </div>
