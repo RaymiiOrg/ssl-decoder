@@ -9,6 +9,7 @@ PHP script which decodes an SSL connection and/or certificate and displays infor
 * Allows a custom port (smtps, imaps, https, 8080, 8443, etc).
 * Validates the certificate, chain, CRL and OCSP (of every cert in the chain).
 * Has easy copy-pastable PEM versions of certs.
+* Constructs correct CA Chain if wrong chain is found.
 * DNSSEC checks
 * Ciphersuite enumeration.
 * JSON API
@@ -23,6 +24,7 @@ PHP script which decodes an SSL connection and/or certificate and displays infor
 - SSL Protocol version tester
 - OCSP validation
 - OCSP Stapling
+- Constructs correct CA Chain if wrong chain is found.
 - HSTS & HPKP headers
 - SPKI hash
 - Public Key PEM

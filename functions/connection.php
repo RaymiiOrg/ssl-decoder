@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function submitCertToCT($chain, $ct_url) {
+  global $timeout;
   $ct_chain = array('chain' => []);
   foreach ($chain as $key => $value) {
     $string = $value['key']['certificate_pem'];
@@ -33,6 +34,7 @@ function submitCertToCT($chain, $ct_url) {
   curl_setopt($ch, CURLOPT_NOBODY, true);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   curl_setopt($ch, CURLOPT_FAILONERROR, false);
+  curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
   curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
   curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
@@ -81,6 +83,7 @@ function server_http_headers($host, $ip, $port){
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
   curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
   curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+  curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
   if(curl_exec($ch) === false) {
       curl_close($ch);
       return false;
@@ -113,7 +116,7 @@ function server_http_headers($host, $ip, $port){
 function ssl_conn_ciphersuites($host, $ip, $port, $ciphersuites) {
   global $timeout;
   $old_error_reporting = error_reporting();
-  error_reporting($old_error_reporting ^ E_WARNING); 
+  error_reporting(0); 
   $results = array();
   foreach ($ciphersuites as $value) {
     $results[$value] = false;
@@ -136,7 +139,9 @@ function ssl_conn_ciphersuites($host, $ip, $port, $ciphersuites) {
 }
 
 function test_heartbleed($ip, $port) {
+  //this uses an external python2 check to test for the heartblead vulnerability
   global $current_folder;
+  global $timeout;
   $exitstatus = 0;
   $output = 0;
   $cmdexitstatus = 0;
@@ -147,6 +152,7 @@ function test_heartbleed($ip, $port) {
   # check if python2 is available
   exec("command -v python2 >/dev/null 2>&1", $cmdoutput, $cmdexitstatus);
   if ($cmdexitstatus != 1) {
+    //15 is a reasonable timeout. 
     exec("timeout 15 python2 " . getcwd() . "/inc/heartbleed.py " . escapeshellcmd($ip) . " --json \"" . $tmpfile . "\" --threads 1 --port " . escapeshellcmd($port) . " --silent", $output, $exitstatus);
     if (file_exists($tmpfile)) {
       $json_data = json_decode(file_get_contents($tmpfile),true);
@@ -166,10 +172,10 @@ function test_heartbleed($ip, $port) {
 }
 
 function heartbeat_test($host, $port) {
-  global $random_blurp, $timeout;
+  //this tests for the heartbeat protocol extension
+  global $random_blurp;
+  global $timeout;
   $result = 0;
-
-  //pre_dump('echo | timeout ' . $timeout . ' openssl s_client -connect ' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . ' -servername ' . escapeshellcmd($host) . ' -tlsextdebug 2>&1 &lt; /dev/null | awk -F\" \'/server extension/ {print $2}\'');
 
   $output = shell_exec('echo | timeout ' . $timeout . ' openssl s_client -connect ' . escapeshellcmd($host) . ':' . escapeshellcmd($port) . ' -servername ' . escapeshellcmd($host) . ' -tlsextdebug 2>&1 </dev/null | awk -F\" \'/server extension/ {print $2}\'');
 
@@ -203,7 +209,6 @@ function conn_compression($host, $ip, $port) {
   }
   $exitstatus = 0;
   $output = 0;
-  //pre_dump('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"'); 
   exec('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -status -tlsextdebug 2>&1 | grep -qe "^Compression: NONE"', $output, $exitstatus); 
   if ($exitstatus == 0) { 
     $result = false;
@@ -216,7 +221,7 @@ function conn_compression($host, $ip, $port) {
 function ssl_conn_protocols($host, $ip, $port) {
   global $timeout;
   $old_error_reporting = error_reporting();
-  error_reporting($old_error_reporting ^ E_WARNING); 
+  error_reporting(0); 
   $results = array('sslv2' => false, 
                    'sslv3' => false, 
                    'tlsv1.0' => false,
@@ -288,6 +293,180 @@ function ssl_conn_protocols($host, $ip, $port) {
   return $results;
 }
 
+function get_ca_issuer_urls($raw_cert_data) {
+  $result = array();
+  $authorityInfoAcces = explode("\n", openssl_x509_parse($raw_cert_data)['extensions']['authorityInfoAccess']);
+  if (openssl_x509_parse($raw_cert_data)['extensions']['authorityInfoAccess']) {
+    foreach ($authorityInfoAcces as $authorityInfoAccess) {
+      $crt_uris = explode("CA Issuers - URI:", $authorityInfoAccess);
+      foreach ($crt_uris as $key => $crt_uri) {
+        foreach (explode("\n", $crt_uri) as $crt_ur) {
+          if($crt_ur) {
+            if (strpos(strtolower($crt_ur), 'ocsp') === false) {
+              array_push($result, $crt_ur);
+            }  
+          }                
+        }
+      }
+    }
+  }
+  return $result;
+}
+
+function get_ca_issuer_crt($raw_cert_data) {
+  //we save certs, so we might have the issuer already.
+  //first check that, otherwise get crt from authorityinfoaccess
+  global $timeout;
+  if (!is_dir('crt_hash')) {
+    mkdir('crt_hash');
+  }
+  // filenames of saved certs are hashes of the asort full subject. 
+  $sort_subject = openssl_x509_parse($raw_cert_data)['issuer'];
+  asort($sort_subject);
+  foreach ($sort_subject as $key => $value) {
+    $issuer_full = "/" . $key . "=" . $value . $issuer_full;
+  }
+  $crt_check_hash = hash("sha256", $issuer_full);
+  $crt_check_hash_folder = "crt_hash/";
+  $crt_check_hash_file = $crt_check_hash_folder . $crt_check_hash . ".pem";
+  if(file_exists($crt_check_hash_file)) {
+    //if we already have a PEM file where the subject matches this certs issuer
+    //it probably is the correct one. return that and be done with it.
+    $crt_data = file_get_contents($crt_check_hash_file);
+    $export_pem = "";
+    openssl_x509_export($crt_data, $export_pem);
+    //make sure it is valid data.
+    if($export_pem) {
+      $crt_cn = openssl_x509_parse($crt_data)['name'];
+      //add start and end for more clarity since this is a copy-pastable thingy.
+      $return_crt = "#start " . $crt_cn . "\n" . $export_pem . "#end " . $crt_cn . "\n";
+      return $return_crt;
+    }
+  } else {
+    $issuer_urls = get_ca_issuer_urls($raw_cert_data);
+    if($issuer_urls) {
+      foreach ($issuer_urls as $key => $ca_issuer_url) {
+        //if we don't have that cert saved, we check if there is a der file
+        //based on the issuer url hash.
+        $crt_hash = hash("sha256", $ca_issuer_url);
+        $crt_hash_folder = "crt_hash/";
+        $crt_hash_file = $crt_hash_folder . $crt_hash . ".der";
+        if (!file_exists($crt_hash_file)) {
+          //that file is not there, let's get it
+          if (0 === strpos($ca_issuer_url, 'http')) {
+            $fp = fopen ($crt_hash_file, 'w+');
+            $ch = curl_init(($ca_issuer_url));
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_FILE, $fp);
+            curl_setopt($ch, CURLOPT_FAILONERROR, true);
+            curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+            if(curl_exec($ch) === false) {
+              continue;
+            }
+            curl_close($ch);
+            if(stat($crt_hash_file)['size'] < 10 ) {
+              //probably a corrypt file. sould be at least +100KB.
+                unlink($crt_hash_file);
+            }
+          }
+        } else {
+          if (time()-filemtime($crt_hash_file) > 5 * 84600) {
+            // file older than 5 days. crt might have changed, retry.
+              $content_hash = sha1_file($crt_hash_file);
+              rename($crt_hash_file, $crt_hash_folder . $content_hash . "content_hash.der");
+              get_ca_issuer_crt($raw_cert_data);
+          }
+        }
+        if (file_exists($crt_hash_file)) {
+          //we have a a der file, we need to convert it to pem and return it.
+          //dirty way to get pem from der...
+          $crt_data = "-----BEGIN CERTIFICATE-----\n" . wordwrap(base64_encode(file_get_contents($crt_hash_file)), 65, "\n", 1) . "\n-----END CERTIFICATE-----";
+          $crt_cn = openssl_x509_parse($crt_data)['name'];
+          $export_pem = "";
+          openssl_x509_export($crt_data, $export_pem);
+          //make sure it is valid data.
+          if($export_pem) {
+            $return_crt = "#start " . $crt_cn . "\n" . $export_pem . "\n#end " . $crt_cn . "\n";
+            //add start and end for more clarity since this is a copy-pastable thingy.
+            $sort_subject = openssl_x509_parse($crt_data)['subject'];
+            asort($sort_subject);
+            foreach ($sort_subject as $key => $value) {
+              $name_full = "/" . $key . "=" . $value . $name_full;
+            }
+            $crt_hash = hash("sha256", $name_full);
+            $crt_hash_folder = "crt_hash/";
+            $crt_hash_file = $crt_hash_folder . $crt_hash . ".pem";
+            //if the chain is wrong and we got this certificate
+            //via the authorityinfoaccess, we might not get it as a 
+            //regular cert via the check. so therefore we save this 
+            //as well, via the same mechanism.
+            if(file_exists($crt_hash_file)) {
+              if (time()-filemtime($crt_hash_file) > 5 * 84600) {
+                // file older than 5 days. crt might have changed, retry.
+                $content_hash = sha1_file($crt_hash_file);
+                rename($crt_hash_file, $crt_hash_folder . $content_hash . "content_hash.pem");
+                file_put_contents($crt_hash_file, $export_pem);
+              }
+            } else {
+              file_put_contents($crt_hash_file, $export_pem);
+            }
+            if(stat($crt_hash_file)['size'] < 10 ) {
+              //probably a corrypt file. sould be at least +100KB.
+              unlink($crt_hash_file);
+            }
+          }
+        }
+        return $return_crt;
+      }            
+    }
+  }
+}
+
+
+function get_issuer_chain($raw_cert_data, $number=1, $result=null) {
+  global $max_chain_length;
+  if ($result['complete'] == 'yes') {
+    return $result;
+  }
+  if ($number > $max_chain_length) {
+    $result['complete'] == 'error';
+    return $result;
+  }
+  $number += 1;
+
+  if (!is_array($result)) {
+    $result = array('certs' => array(), 'complete' => 'false');
+  }
+
+  $sort_subject = openssl_x509_parse($raw_cert_data)['subject'];
+  asort($sort_subject);
+  foreach ($sort_subject as $key => $value) {
+    $subject_full = "/" . $key . "=" . $value . $subject_full;
+  }
+  $sort_issuer = openssl_x509_parse($raw_cert_data)['issuer'];
+  asort($sort_issuer);
+  foreach ($sort_issuer as $key => $value) {
+    $issuer_full = "/" . $key . "=" . $value . $issuer_full;
+  }
+  if($issuer_full == $subject_full && $result) {
+    $result['complete'] == 'yes';
+    return $result;
+  } 
+  $this_issuer = get_ca_issuer_crt($raw_cert_data);
+  if($this_issuer) {
+    array_push($result['certs'], $this_issuer);
+    $result = get_issuer_chain($this_issuer, $number, $result);
+    return $result;
+  } else {
+    return $result;
+  }
+  return $result;
+}
+
 function ssl_conn_metadata($data,$fastcheck=0) {
   global $random_blurp;
   global $current_folder;
@@ -338,6 +517,59 @@ function ssl_conn_metadata($data,$fastcheck=0) {
   }
   echo "</td>";
   echo "</tr>";
+
+  // correct chain
+  if ($fastcheck == 0 && $data["validation"]["status"] == "failed" && is_array($data["validation"]["correct_chain"])) {
+    echo "<tr>";
+    echo "<td><strong>Correct Chain</strong></td>";
+    echo "<td>";
+    echo "<p><strong>The validation of this certificate failed. This might be because of an incorrect or incomplete CA chain. Based on the '<code>authorityInfoAccess</code>' extension and earlier saved certificates, the below result probably contains the correct CA Chain, in the correct order, for this certificate. The result also contains your certificate as the first one.</strong><br>";
+
+    echo "<p>This is our best guess at the correct ca signing chain: <br><ul>";
+    foreach ($data['validation']['cns'] as $cn_key => $cn_value) {
+      foreach ($cn_value as $cnn_key => $cnn_value) {
+        echo "<span style='font-family: monospace;'><li>";
+        if($cnn_key == 'cn') {
+          echo "Name.......: ";
+          echo htmlspecialchars($cnn_value);
+          echo "</li></span>  ";
+        }
+        if ($cnn_key == 'issuer') {
+          echo "Issued by..: ";
+          echo htmlspecialchars($cnn_value);
+          echo "</li></span><br>";
+        }
+      }
+    }
+    echo "</ul></p>";
+    echo "<p>Click below to see the full chain output in PEM format, copy-pastable in most software.</p>";
+    ?>
+    <div class="panel-group" id="accordion-correct-chain" role="tablist" aria-multiselectable="true">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="heading-correct-chain">
+          <h4 class="panel-title">
+            <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse-correct-chain" aria-expanded="false" aria-controls="collapse-correct-chain">
+              Click to Open/Close
+            </a>
+          </h4>
+        </div>
+        <div id="collapse-correct-chain" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading-correct-chain">
+          <div class="panel-body">
+    <?php
+    echo "<pre>"; 
+    foreach ($data['validation']['correct_chain'] as $cert) {
+      echo htmlspecialchars($cert);
+      echo "<br>";
+    }
+    echo "</pre>"; 
+    echo "</div>";
+    echo "</div>";
+    echo "</div>";
+    echo "</div>";
+    echo "</td>";
+    echo "</tr>";
+  }
+
   // ip hostname port
   if ( $data["hostname"] ) {
     echo "<tr>";
@@ -351,7 +583,7 @@ function ssl_conn_metadata($data,$fastcheck=0) {
     echo "</td>";
     echo "</tr>";
   }
-    if($fastcheck == 0) {
+  if($fastcheck == 0) {
     // protocols
     echo "<tr>";
     echo "<td>Protocols</td>";
@@ -603,12 +835,12 @@ function ssl_conn_metadata($data,$fastcheck=0) {
   echo "</table>";
 }
 
-
-
 function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=null,$fastcheck=0) {
   $result = array();
   global $random_blurp;
   global $current_folder;
+  global $timeout;
+  global $max_chain_length;
   $context = stream_context_get_params($read_stream);
   $context_meta = stream_context_get_options($read_stream)['ssl']['session_meta'];
   $cert_data = openssl_x509_parse($context["options"]["ssl"]["peer_certificate"])[0];
@@ -656,6 +888,53 @@ function ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data=nul
         $result["validation"]["status"] = "success";
       }
       unlink('/tmp/verify_cert.' . $random_blurp . '.pem');
+    }
+
+    //chain construction
+    if (isset($chain_data) && $factcheck == 0 && $result["validation"]["status"] == "failed") {
+      $return_chain = array();
+      $export_pem = "";
+      openssl_x509_export($chain_data[0], $export_pem);
+      $crt_cn = openssl_x509_parse($chain_data[0])['name'];
+      $export_pem = "#start " . $crt_cn . "\n" . $export_pem . "\n#end " . $crt_cn . "\n";
+      array_push($return_chain, $export_pem);
+      $chain_length = count($chain_data);
+      $certificate_chain = array();
+      if ($chain_length <= $max_chain_length) {
+        $issuer_crt = get_issuer_chain($chain_data[0]);
+        if (count($issuer_crt['certs']) >= 1) {
+          $issuercrts = array_unique($issuer_crt['certs']);
+          foreach ($issuercrts as $key => $value) {
+            array_push($return_chain, $value);
+          }
+        }
+      }
+    }
+    if(is_array($return_chain)) {
+      $return_chain = array_unique($return_chain);
+    }
+    if(count($return_chain) > 1) {
+      $result["validation"]["cns"] = array();
+      $result["correct_chain"]["cns"] = array();
+      $crt_cn = array();
+      foreach ($return_chain as $retc_key => $retc_value) {
+        $issuer_full = "";
+        $subject_full = "";
+        $sort_issuer = openssl_x509_parse($retc_value)['issuer'];
+        $sort_subject = openssl_x509_parse($retc_value)['subject'];
+        asort($sort_subject);
+        foreach ($sort_subject as $sub_key => $sub_value) {
+          $subject_full = "/" . $sub_key . "=" . $sub_value . $subject_full;
+        }
+        asort($sort_issuer);
+        foreach ($sort_issuer as $iss_key => $iss_value) {
+          $issuer_full = "/" . $iss_key . "=" . $iss_value . $issuer_full;
+        }
+        $crt_cn['cn'] = $subject_full;
+        $crt_cn['issuer'] = $issuer_full;
+        array_push($result["validation"]["cns"], $crt_cn);
+      }
+      $result["validation"]["correct_chain"] = $return_chain;
     }
     // hostname ip port
     $result["ip"] = $ip;

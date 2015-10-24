@@ -208,7 +208,7 @@ foreach (glob("functions/*.php") as $filename) {
         } else {
           echo "<div class='content'><section id='ctsubmit'>";
           echo "<header><h2>Certificate Transparency Submission</h2></header>";
-          echo "Fast check selected, therefore Certificate Transparancy submission is disabled.";
+          echo "Fast check selected, therefore Certificate Transparency submission is disabled.";
           echo "</section></div><p><hr></p>";
         }
       }
@@ -224,7 +224,7 @@ foreach (glob("functions/*.php") as $filename) {
       }
 
       if (strpos($_GET['csr'], "BEGIN CERTIFICATE REQUEST") !== false) { 
-        echo "<header><h2>CSR </h2></header><p>";
+        echo "<header><h2>Certificate Signing Request </h2></header><p>";
         csr_parse($data);
       } else {
         echo "<header><h2>Certificate </h2></header><p>";

@@ -15,10 +15,47 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+function get_sans_from_csr($csr) {
+  global $random_blurp;
+  global $timeout;
+  //openssl_csr_get_subject doesn't support SAN names.
+  $filename = "/tmp/csr-" . $random_blurp . "-" . gen_uuid() . ".csr.pem";
+  $write_csr = file_put_contents($filename, $csr);
+  if($write_csr !== FALSE) {
+    $openssl_csr_output = trim(shell_exec("timeout " . $timeout . " openssl req -noout -text -in " . $filename . " | grep -e 'DNS:' -e 'IP:'"));
+  }
+  unlink($filename);
+  if($openssl_csr_output) {
+    $sans = array();
+    $csr_san_dns = explode("DNS:", $openssl_csr_output);
+    $csr_san_ip = explode("IP:", $openssl_csr_output);
+    if(count($csr_san_dns) > 1) {
+      foreach ($csr_san_dns as $key => $value) {
+        if($value) {
+          $san = trim(str_replace(",", "", str_replace("DNS:", "", $value)));
+          array_push($sans, $san);
+        }
+      }
+    }
+    if(count($csr_san_ip) > 1) {
+      foreach ($csr_san_ip as $key => $value) {
+        if($value) {
+          $san = trim(str_replace(",", "", str_replace("IP:", "", $value)));
+          array_push($sans, $san);
+        }
+      }
+    } 
+  }
+  if(count($sans) >= 1) {
+    return $sans;
+  }
+}
+
 function csr_parse($data) {
+  //parses the json data from csr_parse_json() to a nice html page.
   echo "<table class='table table-striped table-bordered'>";
   echo "<tr>";
-  echo "<td colspan='2'><strong>Certificate Data</strong></td>";
+  echo "<td colspan='2'><strong>Certificate Signing Request Data</strong></td>";
   echo "</tr>";
   foreach ($data['subject'] as $key => $value) {
     echo "<tr><td>";
@@ -73,6 +110,17 @@ function csr_parse($data) {
     }
     echo "</td></tr>\n";
   }
+
+  if($data['csr_sans']) {
+      echo "<tr><td>Subject Alternative Names</td><td><ul>";
+      foreach ($data['csr_sans'] as $key => $value) {
+        echo "<span style='font-family:monospace;'><li>";
+        echo htmlspecialchars($value);
+        echo "</li>";
+      }
+      echo "</ul></td></tr>";
+  }
+
   echo "<tr><td>Public Key PEM (";
   echo htmlspecialchars($data['details']['bits']);
   if ($data['details']['rsa']) {
@@ -89,12 +137,18 @@ function csr_parse($data) {
   }
   echo ")</td><td><pre>";
   echo htmlspecialchars($data['details']['key']);
-  echo "</pre></td>";
+  echo "</pre></td></tr>";
+
+  echo "<tr><td>CSR PEM</td><td><pre>";
+  echo htmlspecialchars($data['csr_pem']);
+  echo "</pre></td></tr>";
   echo "</table>";
 }
 
 
 function cert_parse($data) {
+  //parses the json data from cert_parse_json() to a nice html page.
+  //does output formatting based on some parts, like red if cert expired.
   if (is_array($data["warning"]) && count($data["warning"]) >= 1) {
     $data["warning"] = array_unique($data["warning"]);
     if (count($data["warning"]) == 1) {
@@ -452,25 +506,27 @@ function cert_parse($data) {
       echo "<tr><td>OCSP</td><td>No OCSP URI found in certificate</td></tr>";
     }
   }
-  echo "<tr>";
-  echo "<td>Hostname Validation</td>";
-  echo "<td>";
-  // hostname validation
-  if ($data["hostname_in_san_or_cn"] == "true") {
-    echo "<span class='text-success glyphicon glyphicon-ok'></span>\n<span class='text-success'> - ";
-    echo htmlspecialchars($data['hostname_checked']);
-    echo " found in CN or SAN.</span>";
-  } elseif ($data["hostname_in_san_or_cn"] == "false")  {
-    echo '<span class="text-danger glyphicon glyphicon-remove"></span><span class="text-danger"> - ';
-    echo htmlspecialchars($data['hostname_checked']); 
-    echo ' NOT found in CN or SAN.</span>';
-  } elseif ($data["hostname_in_san_or_cn"] == "n/a; ca signing certificate")  {
-    echo "Not applicable, this seems to be a CA signing certificate.";
-  } else {
-    echo "Not applicable, this seems to be a CA signing certificate.";
+  if(!empty($_GET['host'])) {
+    echo "<tr>";
+    echo "<td>Hostname Validation</td>";
+    echo "<td>";
+    // hostname validation
+    if ($data["hostname_in_san_or_cn"] == "true") {
+      echo "<span class='text-success glyphicon glyphicon-ok'></span>\n<span class='text-success'> - ";
+      echo htmlspecialchars($data['hostname_checked']);
+      echo " found in CN or SAN.</span>";
+    } elseif ($data["hostname_in_san_or_cn"] == "false")  {
+      echo '<span class="text-danger glyphicon glyphicon-remove"></span><span class="text-danger"> - ';
+      echo htmlspecialchars($data['hostname_checked']); 
+      echo ' NOT found in CN or SAN.</span>';
+    } elseif ($data["hostname_in_san_or_cn"] == "n/a; ca signing certificate")  {
+      echo "Not applicable, this seems to be a CA signing certificate.";
+    } else {
+      echo "Not applicable, this seems to be a CA signing certificate.";
+    }
+    echo "</td>";
+    echo "</tr>";
   }
-  echo "</td>";
-  echo "</tr>";
   // details
   echo "<tr>";
   echo "<td colspan='2'><strong>Details</strong></td>";
@@ -553,11 +609,11 @@ function cert_parse($data) {
   echo "</td>";
   echo "</tr>";
 
-  if ($_GET['fastcheck'] == 0) {
+  if ($_GET['fastcheck'] == 0 && !empty($_GET['host'])) {
     echo "<tr>";
     echo "<td>TLSA DNS </td>";
     echo "<td>";
-    if($data['tlsa']['error'] == 'none' && isset($data['tlsa'])) {
+    if($data['tlsa']['error'] == 'none' && !empty($data['tlsa'])) {
       echo "<table class='table table-striped'>";
       foreach ($data["tlsa"] as $key => $value) {
         switch ($key) {
@@ -746,6 +802,60 @@ function cert_parse($data) {
     echo "</div>";
     echo "</td>";
     echo "</tr>";
+
+  // correct chain
+  if (is_array($data["correct_chain"]["chain"])) {
+    echo "<tr>";
+    echo "<td>Certificate Chain</td>";
+    echo "<td>";
+    echo "<p>We've constructed the certificate chain in the correct order of this certificate based on the '<code>authorityInfoAccess</code>' extension and earlier saved certificates. The result also contains this certificate as the first one.<br>";
+
+    echo "<p>This is our best guess at the correct CA Chain: <br><ul>";
+    foreach ($data['correct_chain']['cns'] as $cn_key => $cn_value) {
+      foreach ($cn_value as $cnn_key => $cnn_value) {
+        echo "<span style='font-family: monospace;'><li>";
+        if($cnn_key == 'cn') {
+          echo "Name.......: ";
+          echo htmlspecialchars($cnn_value);
+          echo "</li></span>  ";
+        }
+        if ($cnn_key == 'issuer') {
+          echo "Issued by..: ";
+          echo htmlspecialchars($cnn_value);
+          echo "</li></span><br>";
+        }
+      }
+    }
+    echo "</ul></p>";
+    echo "<p>Click below to see the full chain output in PEM format, copy-pastable in most software.</p>";
+    ?>
+    <div class="panel-group" id="accordion-correct-chain" role="tablist" aria-multiselectable="true">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="heading-correct-chain">
+          <h4 class="panel-title">
+            <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse-correct-chain" aria-expanded="false" aria-controls="collapse-correct-chain">
+              Click to Open/Close
+            </a>
+          </h4>
+        </div>
+        <div id="collapse-correct-chain" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading-correct-chain">
+          <div class="panel-body">
+    <?php
+    echo "<pre>"; 
+    foreach ($data['correct_chain']['chain'] as $cert) {
+      echo htmlspecialchars($cert);
+      echo "<br>";
+    }
+    echo "</pre>"; 
+    echo "</div>";
+    echo "</div>";
+    echo "</div>";
+    echo "</div>";
+    echo "</td>";
+    echo "</tr>";
+  }
+
+
     echo "<tr>";
     echo "<td><a href='https://raymii.org/s/articles/HTTP_Public_Key_Pinning_Extension_HPKP.html'>SPKI Hash</a></td>";
     echo "<td>";
@@ -792,29 +902,7 @@ function cert_parse($data) {
 
 
 
-
-
-
-
-function csr_parse_json($csr) {
-  $result = array();
-  if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
-    $cert_data = openssl_csr_get_public_key($csr);
-    $cert_details = openssl_pkey_get_details($cert_data);
-    $cert_key = $cert_details['key'];
-    $cert_subject = openssl_csr_get_subject($csr);
-    $result["subject"] = $cert_subject;
-    $result["key"] = $cert_key;
-    $result["details"] = $cert_details; 
-  } elseif (strpos($csr, "BEGIN CERTIFICATE") !== false) { 
-    $result = cert_parse_json($csr);
-  } else {
-    $result = array("error" => "data not valid csr");
-  }
-  return $result;
-}
-
-function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $validate_hostname=false, $port="443") {
+function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $validate_hostname=false, $port="443", $include_chain=null) {
   global $random_blurp;
   global $ev_oids;
   global $timeout;
@@ -953,6 +1041,78 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
   $key_details = openssl_pkey_get_details(openssl_pkey_get_public($raw_cert_data));
   $export_pem = "";
   openssl_x509_export($raw_cert_data, $export_pem);
+
+  // save pem. this because the reconstruct chain function works better
+  // this way. not all certs have authorityinfoaccess. We first check if
+  // we already have a matching cert.
+  if (!is_dir('crt_hash')) {
+    mkdir('crt_hash');
+  }
+  // filenames of saved certs are hashes of the asort full subject. 
+  $sort_subject = $cert_data['subject'];
+  asort($sort_subject);
+  foreach ($sort_subject as $key => $value) {
+    $name_full = "/" . $key . "=" . $value . $name_full;
+  }
+  $crt_hash = hash("sha256", $name_full);
+  $crt_hash_folder = "crt_hash/";
+  $crt_hash_file = $crt_hash_folder . $crt_hash . ".pem";
+  if(file_exists($crt_hash_file)) {
+    if (time()-filemtime($crt_hash_file) > 5 * 84600) {
+      // file older than 5 days. crt might have changed, retry.
+      $content_hash = sha1_file($crt_hash_file);
+      rename($crt_hash_file, $crt_hash_folder . $content_hash . "content_hash_save.pem");
+      file_put_contents($crt_hash_file, $export_pem);
+    }
+  } else {
+    file_put_contents($crt_hash_file, $export_pem);
+  }
+  if(stat($crt_hash_file)['size'] < 10 ) {
+    //probably a corrupt file. sould be at least +100KB.
+    unlink($crt_hash_file);
+  }
+
+  //chain reconstruction
+  if($include_chain && $raw_cert_data) {
+    $return_chain = array();
+    $export_pem = "";
+    openssl_x509_export($raw_cert_data, $export_pem);
+    $crt_cn = openssl_x509_parse($raw_cert_data)['name'];
+    $export_pem = "#start " . $crt_cn . "\n" . $export_pem . "\n#end " . $crt_cn . "\n";
+    array_push($return_chain, $export_pem);
+    $certificate_chain = array();
+    $issuer_crt = get_issuer_chain($raw_cert_data);
+    if (count($issuer_crt['certs']) >= 1) {
+      $issuercrts = array_unique($issuer_crt['certs']);
+      foreach ($issuercrts as $key => $value) {
+        array_push($return_chain, $value);
+      }
+    }
+    $return_chain = array_unique($return_chain);
+    if(count($return_chain) > 1) {
+      $result["correct_chain"]["cns"] = array();
+      $crt_cn = array();
+      foreach ($return_chain as $retc_key => $retc_value) {
+        $issuer_full = "";
+        $subject_full = "";
+        $sort_issuer = openssl_x509_parse($retc_value)['issuer'];
+        $sort_subject = openssl_x509_parse($retc_value)['subject'];
+        asort($sort_subject);
+        foreach ($sort_subject as $sub_key => $sub_value) {
+          $subject_full = "/" . $sub_key . "=" . $sub_value . $subject_full;
+        }
+        asort($sort_issuer);
+        foreach ($sort_issuer as $iss_key => $iss_value) {
+          $issuer_full = "/" . $iss_key . "=" . $iss_value . $issuer_full;
+        }
+        $crt_cn['cn'] = $subject_full;
+        $crt_cn['issuer'] = $issuer_full;
+        array_push($result["correct_chain"]["cns"], $crt_cn);
+      }
+      $result["correct_chain"]["chain"] = $return_chain;
+    }
+  }
+
   //hashes
   $string = $export_pem;
   $pattern = '/-----(.*)-----/';
@@ -963,8 +1123,6 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
   $replacement = '';
   $export_pem_preg = preg_replace($pattern, $replacement, $string);
   $export_pem_preg = wordwrap($export_pem_preg, 77, "\n", TRUE);
-  //pre_dump("export preg: " . $export_pem_preg);
-  //pre_dump("end");
   $result['hash']['md5'] = cert_hash('md5',       $export_pem_preg);
   $result['hash']['sha1'] = cert_hash('sha1',     $export_pem_preg);
   $result['hash']['sha256'] = cert_hash('sha256', $export_pem_preg);
@@ -972,7 +1130,7 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
   $result['hash']['sha512'] = cert_hash('sha512', $export_pem_preg);
   
   //TLSA check
-  if (isset($cert_data['subject']['CN']) && isset($host)) {
+  if (!empty($cert_data['subject']['CN']) && !empty($host)) {
     if ($validate_hostname == true) {
       $tlsa_record = shell_exec("timeout " . $timeout . " dig +short +dnssec +time=" . $timeout . " TLSA _" . escapeshellcmd($port) . "._tcp." . escapeshellcmd($host) . " 2>&1 | head -n 1");
       if (!empty($tlsa_record)) {
@@ -1060,6 +1218,34 @@ function cert_parse_json($raw_cert_data, $raw_next_cert_data=null, $host=null, $
 
 
 
+
+function csr_parse_json($csr) {
+  //if csr or cert is pasted in form tis function parses the csr or it send the cert to cert_parse.
+  global $random_blurp;
+  global $timeout;
+  $result = array();
+  if (strpos($csr, "BEGIN CERTIFICATE REQUEST") !== false) { 
+    $cert_data = openssl_csr_get_public_key($csr);
+    $cert_details = openssl_pkey_get_details($cert_data);
+    $cert_key = $cert_details['key'];
+    $cert_subject = openssl_csr_get_subject($csr);
+    $result["subject"] = $cert_subject;
+    $result["key"] = $cert_key;
+    $result["details"] = $cert_details; 
+    if ($cert_details) {
+      $result["csr_pem"] = $csr;
+      $sans = get_sans_from_csr($csr);
+      if(count($sans) > 1) {
+        $result["csr_sans"] = $sans;
+      }
+    }
+  } elseif (strpos($csr, "BEGIN CERTIFICATE") !== false) { 
+    $result = cert_parse_json($csr, null, null, null, null, true);
+  } else {
+    $result = array("error" => "data not valid csr");
+  }
+  return $result;
+}
 
 
 

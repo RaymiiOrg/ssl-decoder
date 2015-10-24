@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function pre_dump($var) {
+  //this function is amazing whilst debugging.
   echo "<pre>";
   var_dump($var);
   echo "</pre>";
@@ -33,30 +34,34 @@ function utf8encodeNestedArray($arr) {
   return $encoded_arr;
 }
 
+//two helper functions to check if string starts or end with, from stack overflow.
 function startsWith($haystack, $needle) {
-    // search backwards starting from haystack length characters from the end
-    return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
+  // search backwards starting from haystack length characters from the end
+  return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
 }
 function endsWith($haystack, $needle) {
-    // search forward starting from end minus needle length characters
-    if(!empty($haystack)) {
-        return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
-    }
+  // search forward starting from end minus needle length characters
+  if(!empty($haystack)) {
+    return $needle === "" || strpos($haystack, $needle, strlen($haystack) - strlen($needle)) !== FALSE;
+  }
 }
 
 function get_current_folder(){
-    $url = $_SERVER['REQUEST_URI']; 
-    $parts = explode('/',$url);
-    $folder = '';
-    for ($i = 0; $i < count($parts) - 1; $i++) {
-        $folder .= $parts[$i] . "/";
-    }
-    return $folder;
+  //not current OS folder, but current web folder.
+  //used for relative links and css/js files
+  $url = $_SERVER['REQUEST_URI']; 
+  $parts = explode('/',$url);
+  $folder = '';
+  for ($i = 0; $i < count($parts) - 1; $i++) {
+    $folder .= $parts[$i] . "/";
+  }
+  return $folder;
 }
 
 $current_folder = get_current_folder();
 
 function gen_uuid() {
+  //from stack overflow.
   return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
     // 32 bits for "time_low"
     mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),

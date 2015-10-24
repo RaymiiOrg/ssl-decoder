@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# timeout in seconds
+# timeout in seconds, used globally (curl, shell commands, etc)
 $timeout = 2;
 
 # max chain length (big chain slows down checks)
@@ -23,27 +23,31 @@ $max_chain_length = 10;
 # Don't change stuff down here.
 date_default_timezone_set('UTC');
 
-$version = 2.9;
+$version = 3.0;
 
-ini_set('default_socket_timeout', 2);
+ini_set('default_socket_timeout', $timeout);
 
-$random_blurp = rand(1000,99999);
+//used for random filenames in /tmp in crl and ocsp checks
+$random_blurp = rand(10,99999);
 
 // 2015-09-21 http://www.certificate-transparency.org/known-logs
-$ct_urls = ["https://ct.ws.symantec.com", 
-        "https://ct.googleapis.com/pilot",
-        "https://ct.googleapis.com/aviator", 
-        "https://ct.googleapis.com/rocketeer",
-        "https://ct1.digicert-ct.com/log",
-        "https://ct.izenpe.com",
-        "https://ctlog.api.venafi.com", 
-        "https://log.certly.io"];
+// $ct_urls = ["https://ct.ws.symantec.com", 
+//         "https://ct.googleapis.com/pilot",
+//         "https://ct.googleapis.com/aviator", 
+//         "https://ct.googleapis.com/rocketeer",
+//         "https://ct1.digicert-ct.com/log",
+//         "https://ct.izenpe.com",
+//         "https://ctlog.api.venafi.com", 
+//         "https://log.certly.io"];
+$ct_urls = ["https://ct.googleapis.com/aviator"];
+
 
 # 2014-11-10 (nov) from wikipedia
 $ev_oids = array("1.3.6.1.4.1.34697.2.1", "1.3.6.1.4.1.34697.2.2", "1.3.6.1.4.1.34697.2.3", "1.3.6.1.4.1.34697.2.4", "1.2.40.0.17.1.22", "2.16.578.1.26.1.3.3", "1.3.6.1.4.1.17326.10.14.2.1.2", "1.3.6.1.4.1.17326.10.8.12.1.2", "1.3.6.1.4.1.6449.1.2.1.5.1", "2.16.840.1.114412.2.1", "2.16.840.1.114412.1.3.0.2", "2.16.528.1.1001.1.1.1.12.6.1.1.1", "2.16.840.1.114028.10.1.2", "0.4.0.2042.1.4", "0.4.0.2042.1.5", "1.3.6.1.4.1.13177.10.1.3.10", "1.3.6.1.4.1.14370.1.6", "1.3.6.1.4.1.4146.1.1", "2.16.840.1.114413.1.7.23.3", "1.3.6.1.4.1.14777.6.1.1", "2.16.792.1.2.1.1.5.7.1.9", "1.3.6.1.4.1.22234.2.5.2.3.1", "1.3.6.1.4.1.782.1.2.1.8.1", "1.3.6.1.4.1.8024.0.2.100.1.2", "1.2.392.200091.100.721.1", "2.16.840.1.114414.1.7.23.3", "1.3.6.1.4.1.23223.2", "1.3.6.1.4.1.23223.1.1.1", "2.16.756.1.83.21.0", "2.16.756.1.89.1.2.1.1", "2.16.840.1.113733.1.7.48.1", "2.16.840.1.114404.1.1.2.4.1", "2.16.840.1.113733.1.7.23.6", "1.3.6.1.4.1.6334.1.100.1", "2.16.840.1.114171.500.9", "1.3.6.1.4.1.36305.2");
 
 
 function parse_hostname($u_hostname){
+    # parses the URL and if no extea IP given, returns all A/AAAA records for that IP.
     # format raymii.org:1.2.34.56 should do SNI request to that ip.
     # parts[0]=host, parts[1]=ip
     $port = 0;
@@ -87,6 +91,7 @@ function parse_hostname($u_hostname){
 }
 
 function choose_endpoint($ips, $host, $port, $fastcheck) {
+    //if we detect multiple A/AAAA records, then show a page to choose the endpoint
     global $version;
     echo "<div id='page-content-wrapper'>\n";
     echo "<div class='container-fluid'>\n";
@@ -100,6 +105,7 @@ function choose_endpoint($ips, $host, $port, $fastcheck) {
       echo "\">SSL Decoder</a></h1>\n";
       echo "</div>\n";
     }
+    //this div is hidden and only shown when an endpoint is choosen.
     echo "<div id='preloader'>\n";
     echo "<p>\n";
     echo "<img src=\"";
@@ -112,7 +118,7 @@ function choose_endpoint($ips, $host, $port, $fastcheck) {
     echo "<div id='resultDiv'></div>\n";
     echo "<div class='content' id='choose_endp'>\n<section id='choose_endpoint'>\n";
     echo "<header>\n<h2>Multiple endpoints for " . htmlspecialchars($host) . "</h2>\n</header>\n";
-    echo "<p>We've found multiple results for " . htmlspecialchars($host) . ". Please choose the host you want to scan from the list below:</p>\n<br>\n";
+    echo "<p>We've found multiple A or AAAA records for " . htmlspecialchars($host) . ". Please choose the host you want to scan from the list below:</p>\n<br>\n";
     echo "<ul>\n";
     foreach ($ips as $ip) {
         echo "<li>";
@@ -121,6 +127,7 @@ function choose_endpoint($ips, $host, $port, $fastcheck) {
         echo "?host=";
         echo htmlspecialchars($host);
         echo ":";
+        //ipv6 url's require [1234::5678] format
         if ($ip['type'] == 'A') {
             echo htmlspecialchars($ip['ip']);
         } elseif ($ip['type'] == 'AAAA') {

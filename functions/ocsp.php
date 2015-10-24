@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function ocsp_stapling($host, $ip, $port) {
+  //used openssl cli to check if host has enabled oscp stapling.
   global $timeout;
   if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
         // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
@@ -50,6 +51,7 @@ function ocsp_stapling($host, $ip, $port) {
 }
 
 function ocsp_verify_json($raw_cert_data, $raw_next_cert_data, $ocsp_uri) {
+  //uses openssl cli to validate cert status with ocsp
   global $random_blurp, $timeout;
   $result = array();
   $tmp_dir = '/tmp/'; 
@@ -64,8 +66,6 @@ function ocsp_verify_json($raw_cert_data, $raw_next_cert_data, $ocsp_uri) {
 
   // Some OCSP's want HTTP/1.1 but OpenSSL does not do that. Add Host header as workaround.
   $ocsp_host = parse_url($ocsp_uri, PHP_URL_HOST);
-
-  //pre_dump('openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc.' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
 
   $output = shell_exec('timeout ' . $timeout . ' | openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
   
@@ -105,7 +105,7 @@ function ocsp_verify_json($raw_cert_data, $raw_next_cert_data, $ocsp_uri) {
     $result["revocation_time"] = $lines["Revocation Time"];
   }
   $result["ocsp_uri"] = $ocsp_uri;
-  
+  //remove temp files after use
   unlink($tmp_dir.$random_blurp.'.cert_client.pem');
   unlink($tmp_dir.$random_blurp.'.cert_issuer.pem');
 

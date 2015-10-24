@@ -24,7 +24,7 @@
                   <div class="checkbox">
                     <label for="fastcheck">
                       <input type="checkbox" name="fastcheck" id="fastcheck" value="1">
-                      Fast check (no connection details, no TLSA check, no certificate transparancy submission)
+                      Fast check (no connection details, no TLSA check, no certificate transparency submission)
                     </label>
                   </div>
                 </div>
@@ -33,9 +33,10 @@
               <div class="form-group">
                 <label class="col-md-1 control-label" for="csr">CSR / Certificate</label>
                 <div class="col-md-5">                     
-                  <textarea class="form-control" rows=6 id="csr" name="csr"></textarea>
+                  <textarea class="form-control" rows=6 id="csr" name="csr" placeholder="Paste a CSR or certificate (in PEM format) here to get all the information in the cert/csr, including the full chain of trust."></textarea>
                 </div>
               </div>
+
               <div class="form-group">
                 <div class="col-md-4">
                   <label class="col-md-2 col-md-offset-1 control-label" for="s"></label>

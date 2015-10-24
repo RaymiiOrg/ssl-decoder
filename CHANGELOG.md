@@ -1,10 +1,18 @@
 # Changelog
 
+## 3.0
+
+- Add chain reconstruction. If a chain is wrong or incomplete, we construct the correct chain based on earlier checks and the AuthorityInfoAccess extension.
+- Add display of certificate chain when single certificate is given. 
+- Add display of Subject Alternative Names in CSR parsing output.
+- Add display of CSR PEM in CSR parsing output.
+- Small code fixes, comment improvements.
+
 ## 2.9
 
 - Add certificate hashes (MD5, SHA1, SHA256, SHA384, SHA512).
 - Add TLSA validation check.
-- Add "fast check" option which disables connection data, dns and certificate transparancy submission to speed up the result (less remote requests).
+- Add "fast check" option which disables connection data, dns and certificate transparency submission to speed up the result (less remote requests).
 - Add loading cog to multiple endpoint chooser.
 
 ## 2.8

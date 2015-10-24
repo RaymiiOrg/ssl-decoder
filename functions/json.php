@@ -18,6 +18,8 @@ function check_json($host,$ip,$port,$fastcheck=0) {
   global $timeout;
   global $max_chain_length;
   global $ct_urls;
+  $old_error_reporting = error_reporting();
+  error_reporting(0);
   $data = [];
   $stream = stream_context_create (array("ssl" => 
     array("capture_peer_cert" => true,
@@ -51,11 +53,12 @@ function check_json($host,$ip,$port,$fastcheck=0) {
         $next = $chain_data[$key+1];
         $prev = $chain_data[$key-1];
         $chain_key = (string)$key+1;
+        $include_chain = false;
         if ($key == 0) {
           $data["connection"] = ssl_conn_metadata_json($host, $ip, $port, $read_stream, $chain_data, $fastcheck);
-          $data["chain"][$chain_key] = cert_parse_json($curr, $next, $host, true, $port);
+          $data["chain"][$chain_key] = cert_parse_json($curr, $next, $host, true, $port, $include_chain);
         } else {
-          $data["chain"][$chain_key] = cert_parse_json($curr, $next, null, false, $port);
+          $data["chain"][$chain_key] = cert_parse_json($curr, $next, null, false, $port, $include_chain);
         }
         // certificate transparency
         $data["certificate_transparency"] = [];
@@ -78,6 +81,7 @@ function check_json($host,$ip,$port,$fastcheck=0) {
       return $data;
     }
   }
+  error_reporting($old_error_reporting);
   return $data;
 }
 
