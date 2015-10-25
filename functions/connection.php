@@ -513,7 +513,7 @@ function ssl_conn_metadata($data,$fastcheck=0) {
     echo htmlspecialchars($data["validation"]["error"]);
     echo "</pre>";
   } else {
-    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Sucessfully validated certificate chain.</span><br>";
+    echo "<span class='text-success glyphicon glyphicon-ok'></span> - <span class='text-success'>Successfully validated certificate chain.</span><br>";
   }
   echo "</td>";
   echo "</tr>";
