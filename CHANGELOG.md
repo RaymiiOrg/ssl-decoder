@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1
+
+- Fix HTTP header resolution in some cloudflare cases (HSTS/HPKP)
+- Fix some small typo's
+- Add introduction text
+- Add input types to form for mobile devices
+
 ## 3.0
 
 - Add chain reconstruction. If a chain is wrong or incomplete, we construct the correct chain based on earlier checks and the AuthorityInfoAccess extension.

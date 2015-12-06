@@ -23,7 +23,7 @@ $max_chain_length = 10;
 # Don't change stuff down here.
 date_default_timezone_set('UTC');
 
-$version = 3.0;
+$version = 3.1;
 
 ini_set('default_socket_timeout', $timeout);
 

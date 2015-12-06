@@ -46,7 +46,7 @@ PHP script which decodes an SSL connection and/or certificate and displays infor
 - PHP 5.6+
 - OpenSSL
 - PHP must allow shell_exec and remote fopen.
-- Debian: `php-intl` package installed.
+- PHP modules: `php-intl`, `php-bcmath`, `php-curl`, `php-mbstring`, `php-xml`.
 
 For the heartbleed test `python2` and `python-netaddr` are required.
 

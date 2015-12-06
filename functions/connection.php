@@ -32,7 +32,7 @@ function submitCertToCT($chain, $ct_url) {
   curl_setopt($ch, CURLOPT_URL, $ct_url . "/ct/v1/add-chain");
   curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
   curl_setopt($ch, CURLOPT_NOBODY, true);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_FAILONERROR, false);
   curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
   curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
@@ -73,6 +73,8 @@ function get(&$var, $default=null) {
 function server_http_headers($host, $ip, $port){
   global $timeout;
   // first check if server is http. otherwise long timeout.
+  // sometimes fails cloudflare with
+  // error:14077438:SSL routines:SSL23_GET_SERVER_HELLO:tlsv1 alert internal error
   $ch = curl_init(("https://" . $ip . ":" . $port));
   curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
   curl_setopt($ch, CURLOPT_NOBODY, true);
@@ -85,8 +87,10 @@ function server_http_headers($host, $ip, $port){
   curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
   curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
   if(curl_exec($ch) === false) {
+      if(curl_errno($ch) != 35) {
       curl_close($ch);
       return false;
+    }
   }
   curl_close($ch);
 
@@ -107,6 +111,7 @@ function server_http_headers($host, $ip, $port){
       )
     );
   $headers = get_headers("https://$ip:$port", 1);
+  //pre_dump($headers);
   if (!empty($headers)) {
     $headers = array_change_key_case($headers, CASE_LOWER);
     return $headers;
@@ -329,6 +334,7 @@ function get_ca_issuer_crt($raw_cert_data) {
   $crt_check_hash = hash("sha256", $issuer_full);
   $crt_check_hash_folder = "crt_hash/";
   $crt_check_hash_file = $crt_check_hash_folder . $crt_check_hash . ".pem";
+  echo "\n<!-- " . htmlspecialchars($issuer_full) . "\n" . $crt_check_hash_file . " -->\n";
   if(file_exists($crt_check_hash_file)) {
     //if we already have a PEM file where the subject matches this certs issuer
     //it probably is the correct one. return that and be done with it.
@@ -351,6 +357,7 @@ function get_ca_issuer_crt($raw_cert_data) {
         $crt_hash = hash("sha256", $ca_issuer_url);
         $crt_hash_folder = "crt_hash/";
         $crt_hash_file = $crt_hash_folder . $crt_hash . ".der";
+        echo "\n<!-- " . htmlspecialchars($ca_issuer_url) . "\n" . $crt_hash_file . " -->\n";
         if (!file_exists($crt_hash_file)) {
           //that file is not there, let's get it
           if (0 === strpos($ca_issuer_url, 'http')) {
@@ -377,7 +384,7 @@ function get_ca_issuer_crt($raw_cert_data) {
           if (time()-filemtime($crt_hash_file) > 5 * 84600) {
             // file older than 5 days. crt might have changed, retry.
               $content_hash = sha1_file($crt_hash_file);
-              rename($crt_hash_file, $crt_hash_folder . $content_hash . "content_hash.der");
+              rename($crt_hash_file, $crt_hash_folder . $content_hash . ".content_hash.der");
               get_ca_issuer_crt($raw_cert_data);
           }
         }
@@ -408,7 +415,7 @@ function get_ca_issuer_crt($raw_cert_data) {
               if (time()-filemtime($crt_hash_file) > 5 * 84600) {
                 // file older than 5 days. crt might have changed, retry.
                 $content_hash = sha1_file($crt_hash_file);
-                rename($crt_hash_file, $crt_hash_folder . $content_hash . "content_hash.pem");
+                rename($crt_hash_file, $crt_hash_folder . $content_hash . ".content_hash.pem");
                 file_put_contents($crt_hash_file, $export_pem);
               }
             } else {
@@ -773,7 +780,7 @@ function ssl_conn_metadata($data,$fastcheck=0) {
       echo htmlspecialchars($data["strict_transport_security"]);
       echo "</span>";
     }
-    echo " <a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html' data-toggle='tooltip' data-placement='top' title='Strict Transport Security lets visitors know that your website should only be visitid via HTTPS. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
+    echo " <a href='https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html' data-toggle='tooltip' data-placement='top' title='Strict Transport Security lets visitors know that your website should only be visited via HTTPS. Click the question mark for more info.'><span class='glyphicon glyphicon-question-sign' aria-hidden='true'></span></a>";
     echo "</td>";
     echo "</tr>";
     echo "<tr>";
