@@ -17,12 +17,20 @@
 function ocsp_stapling($host, $ip, $port) {
   //used openssl cli to check if host has enabled oscp stapling.
   global $timeout;
-  if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-        // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
-    return false;
-  }
+  // OpenSSL 1.1.0 has ipv6 support: https://rt.openssl.org/Ticket/Display.html?id=1832
+  // if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+  //       // ipv6 openssl tools are broken. (https://rt.openssl.org/Ticket/Display.html?id=1365&user=guest&pass=guest)
+  //   return false;
+  // }
   $result = "";
-  $output = shell_exec('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -tlsextdebug -status 2>&1 | sed -n "/OCSP response:/,/---/p"'); 
+  // escapeshellcmd adds \[\] to ipv6 address.
+  // todo: look into escapeshellarg vs. escapeshellcmd
+  if (filter_var(preg_replace('/[^A-Za-z0-9\.\:_-]/', '', $ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+    $output = shell_exec('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect \'' . $ip . ':' . escapeshellcmd($port) . '\' -tlsextdebug -status 2>&1 | sed -n "/OCSP response:/,/---/p"'); 
+  } else {
+    $output = shell_exec('echo | timeout ' . $timeout . ' openssl s_client -servername "' . escapeshellcmd($host) . '" -connect "' . escapeshellcmd($ip) . ':' . escapeshellcmd($port) . '" -tlsextdebug -status 2>&1 | sed -n "/OCSP response:/,/---/p"'); 
+  }
+ 
   if (strpos($output, "no response sent") !== false) { 
     $result = array("working" => 0,
       "cert_status" => "No response sent");
@@ -67,9 +75,9 @@ function ocsp_verify_json($raw_cert_data, $raw_next_cert_data, $ocsp_uri) {
   // Some OCSP's want HTTP/1.1 but OpenSSL does not do that. Add Host header as workaround.
   $ocsp_host = parse_url($ocsp_uri, PHP_URL_HOST);
 
-  $output = shell_exec('timeout ' . $timeout . ' | openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1');
+  $output = shell_exec('timeout ' . $timeout . ' | openssl ocsp -resp_text -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST='. escapeshellcmd($ocsp_host) . '" 2>&1');
   
-  $filter_output = shell_exec('timeout ' . $timeout . ' | openssl ocsp -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST" "'. escapeshellcmd($ocsp_host) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem"');
+  $filter_output = shell_exec('timeout ' . $timeout . ' | openssl ocsp -resp_text -no_nonce -CAfile '.$root_ca.' -issuer '.$isser_loc .' -cert '.$tmp_dir.$random_blurp.'.cert_client.pem -url "'. escapeshellcmd($ocsp_uri) . '" -header "HOST='. escapeshellcmd($ocsp_host) . '" 2>&1 | grep -v -e "to get local issuer certificate" -e "signer certificate not found" -e "Response Verify" -e "'. $tmp_dir.$random_blurp.'.cert_client.pem" | grep -e "Cert Status:" -e "Revocation Time:" -e "Revocation Reason:" -e "This Update:" -e "Next Update:" -e "OCSP Response Status:"');
 
   $output = preg_replace("/[[:blank:]]+/"," ", $output);
   $ocsp_status_lines = explode("\n", $output);

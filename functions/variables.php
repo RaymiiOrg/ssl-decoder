@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # timeout in seconds, used globally (curl, shell commands, etc)
-$timeout = 2;
+$timeout = 120;
 
 # max chain length (big chain slows down checks)
 $max_chain_length = 10;
@@ -23,7 +23,7 @@ $max_chain_length = 10;
 # Don't change stuff down here.
 date_default_timezone_set('UTC');
 
-$version = 3.1;
+$version = 3.2;
 
 ini_set('default_socket_timeout', $timeout);
 
