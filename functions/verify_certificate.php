@@ -94,7 +94,7 @@ function spki_hash($raw_cert_data) {
   $tmp_dir = '/tmp/'; 
   //below command returns the SPKI hash of a public key.
   openssl_x509_export_to_file($raw_cert_data, $tmp_dir.$random_blurp.'.cert_client.pem'); 
-  $output = shell_exec('timeout ' . $timeout . ' openssl x509 -noout -in '.$tmp_dir.$random_blurp.'.cert_client.pem  -pubkey | openssl asn1parse -noout -inform pem -out '.$tmp_dir.$random_blurp.'.public.key; openssl dgst -sha256 -binary '. $tmp_dir . $random_blurp . '.public.key | openssl enc -base64 2>&1');
+  $output = shell_exec('timeout ' . $timeout . '  openssl x509 -noout -in '.$tmp_dir.$random_blurp.'.cert_client.pem  -pubkey | openssl asn1parse -noout -inform pem -out '.$tmp_dir.$random_blurp.'.public.key; openssl dgst -sha256 -binary '. $tmp_dir . $random_blurp . '.public.key | openssl enc -base64 2>&1');
   //remove those files again.
   unlink($tmp_dir.$random_blurp.'.cert_client.pem');
   unlink($tmp_dir.$random_blurp.'.public.key');
