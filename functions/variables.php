@@ -23,23 +23,15 @@ $max_chain_length = 10;
 # Don't change stuff down here.
 date_default_timezone_set('UTC');
 
-$version = 3.2;
+$version = 3.3;
 
 ini_set('default_socket_timeout', $timeout);
 
 //used for random filenames in /tmp in crl and ocsp checks
 $random_blurp = rand(10,99999);
 
-// 2015-09-21 http://www.certificate-transparency.org/known-logs
-// $ct_urls = ["https://ct.ws.symantec.com", 
-//         "https://ct.googleapis.com/pilot",
-//         "https://ct.googleapis.com/aviator", 
-//         "https://ct.googleapis.com/rocketeer",
-//         "https://ct1.digicert-ct.com/log",
-//         "https://ct.izenpe.com",
-//         "https://ctlog.api.venafi.com", 
-//         "https://log.certly.io"];
-$ct_urls = ["https://ct.googleapis.com/aviator"];
+// https://www.gstatic.com/ct/log_list/log_list.json
+$ct_urls = ["https://ct.googleapis.com/pilot", "https://ct1.digicert-ct.com/log"];
 
 
 # 2014-11-10 (nov) from wikipedia
