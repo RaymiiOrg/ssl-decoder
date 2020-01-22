@@ -1,5 +1,7 @@
 # SSL Decoder
 
+Notice: https://raymii.org/s/blog/Cancellation_notice_for_cipherlist_ssldecoder_and_certificatemonitor.html
+
 PHP script which decodes an SSL connection and/or certificate and displays information.
 
 * Tries to give all the information you need instead of a rating. 
